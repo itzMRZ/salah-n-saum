@@ -479,36 +479,79 @@
             }
         }
 
-        // Modify the loadRamadanData function to better identify today's data
+        // Function to match current date to prayer time data
+        function findTodaysPrayerData(prayerData) {
+            const now = getDhakaNow();
+            const currentMonth = now.toLocaleString('en-US', { month: 'long' });
+            const currentDay = now.getDate();
+
+            console.log(`Looking for ${currentMonth} ${currentDay}`);
+
+            // Find today's entry
+            const todayIndex = prayerData.findIndex(item =>
+                item.month === currentMonth && item.day === currentDay
+            );
+
+            if (todayIndex >= 0 && todayIndex < prayerData.length - 1) {
+                return {
+                    today: prayerData[todayIndex],
+                    tomorrow: prayerData[todayIndex + 1]
+                };
+            }
+
+            return null;
+        }
+
+        // Update the loadRamadanData function
         function loadRamadanData() {
-            console.log("Fetching ramadan2025.json...");
-            return fetch('ramadan2025.json')
+            console.log("Fetching prayer time data...");
+            return fetch('ramadan2025.json')  // You can rename this to a more generic name
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                     return response.json();
                 })
-                .then(ramadanData => {
-                    if (!Array.isArray(ramadanData) || ramadanData.length === 0) {
+                .then(prayerData => {
+                    if (!Array.isArray(prayerData) || prayerData.length === 0) {
                         throw new Error('Invalid data format');
                     }
 
-                    // IMPORTANT: For testing purposes, always use the first entry as "today"
-                    // Remove this override for production
-                    const todayIndex = 0; // Force first entry to be today during testing
-                    const tomorrowIndex = 1;
+                    // For testing, you can still use fixed indices:
+                    // const todayIndex = 0;
+                    // const tomorrowIndex = 1;
+                    // updatePrayerTimes({ items: [prayerData[todayIndex], prayerData[tomorrowIndex]] });
 
-                    console.log(`Using fixed indices for testing: today=${todayIndex}, tomorrow=${tomorrowIndex}`);
-                    console.log("Today's data:", ramadanData[todayIndex]);
-                    console.log("Tomorrow's data:", ramadanData[tomorrowIndex]);
-
-                    updatePrayerTimes({
-                        items: [ramadanData[todayIndex], ramadanData[tomorrowIndex]]
-                    });
+                    // Or use dynamic date matching:
+                    const result = findTodaysPrayerData(prayerData);
+                    if (result) {
+                        updatePrayerTimes({ items: [result.today, result.tomorrow] });
+                    } else {
+                        console.warn("Could not find today's data, using first two entries");
+                        updatePrayerTimes({ items: [prayerData[0], prayerData[1]] });
+                    }
                 })
                 .catch(error => {
-                    console.error('Error loading ramadan2025.json:', error);
+                    console.error('Error loading prayer time data:', error);
                     alert('Failed to load prayer time data. Please check your network connection and reload the page.');
                 });
+        }
+
+        // Update getISOFromItem to work with the new format
+        function getISOFromItem(item) {
+            try {
+                if (!item || !item.month || !item.day) {
+                    console.error("Invalid item for date conversion:", item);
+                    return "";
+                }
+
+                const currentYear = new Date().getFullYear();
+                const month = new Date(`${item.month} 1, 2000`).getMonth() + 1; // Get month number (1-12)
+                const day = item.day;
+
+                return `${currentYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            } catch (error) {
+                console.error("Error converting date:", error);
+                return "";
+            }
         }
 
         // Update current date and time display
