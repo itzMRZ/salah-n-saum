@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iftar Time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Jozoor&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-image: url('https://i.postimg.cc/nV1FyY2P/download-3.jpg');
+            background-size: cover;
+            background-position: center;
+            font-family: 'Jozoor', sans-serif;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen bg-gray-800 bg-opacity-50">
+    <!-- Current Date & Time Section -->
+    <div id="current-datetime" class="bg-white bg-opacity-75 rounded-lg p-2 text-center w-11/12 mb-4">
+        <p class="text-xl font-bold" id="current-date">Loading date...</p>
+        <p class="text-2xl" id="current-time">Loading time...</p>
+    </div>
+
+    <!-- Main Event Section -->
+    <div id="main-event" class="bg-white bg-opacity-75 rounded-lg p-4 text-center mb-4 w-11/12">
+        <h1 class="text-2xl font-bold" id="main-event-label">Loading Event...</h1>
+        <p class="text-lg" id="main-event-date">Loading date...</p>
+        <p class="text-4xl font-bold" id="main-event-time">Loading time...</p>
+    </div>
+
+    <!-- Countdown Section -->
+    <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center mb-4 w-11/12">
+        <h2 class="text-2xl font-bold">Countdown</h2>
+        <div class="flex justify-center items-center space-x-2 mt-2">
+            <div class="bg-black text-white rounded-lg p-2 text-center">
+                <p class="text-4xl font-bold" id="countdown-hours">--</p>
+                <p class="text-sm">Hours</p>
+            </div>
+            <p class="text-4xl font-bold">:</p>
+            <div class="bg-black text-white rounded-lg p-2 text-center">
+                <p class="text-4xl font-bold" id="countdown-minutes">--</p>
+                <p class="text-sm">Minutes</p>
+            </div>
+            <p class="text-4xl font-bold">:</p>
+            <div class="bg-black text-white rounded-lg p-2 text-center">
+                <p class="text-4xl font-bold" id="countdown-seconds">--</p>
+                <p class="text-sm">Seconds</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Event Section -->
+    <div id="secondary-event" class="bg-white bg-opacity-75 rounded-lg p-4 text-center mb-4 w-11/12">
+        <h2 class="text-2xl font-bold" id="secondary-event-label">Other Event</h2>
+        <p class="text-lg" id="secondary-event-date">Loading date...</p>
+        <p class="text-4xl font-bold" id="secondary-event-time">Loading time...</p>
+    </div>
+
+    <!-- Other Prayers Section -->
+    <div class="flex justify-center space-x-4 mb-4 w-11/12">
+        <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center w-1/2">
+            <p class="text-xl font-bold" id="next-prayer-name">Next Prayer</p>
+            <p class="text-lg" id="next-prayer-time">Loading...</p>
+        </div>
+        <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center w-1/2">
+            <p class="text-xl font-bold" id="following-prayer-name">Following Prayer</p>
+            <p class="text-lg" id="following-prayer-time">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Buttons Section -->
+    <div class="flex justify-center space-x-4 w-11/12 mb-4">
+        <button class="bg-white bg-opacity-75 rounded-lg p-4 text-center flex-1 flex items-center justify-center space-x-2" id="install-button">
+            <i class="fas fa-download"></i>
+            <span>INSTALL</span>
+        </button>
+        <button class="bg-white bg-opacity-75 rounded-lg p-4 text-center flex-1 flex items-center justify-center space-x-2" id="credits-button">
+            <i class="fas fa-plus"></i>
+            <span>CREDITS</span>
+        </button>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Helper: returns the current time in Dhaka with proper validation
+        function getDhakaNow() {
+            try {
+                return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+            } catch (error) {
+                console.error("Error getting Dhaka time:", error);
+                return new Date(); // Fallback to local time
+            }
+        }
+
+        // Replace the parseTime function with this improved version:
+        function parseTime(dateString, timeString) {
+            try {
+                if (!timeString) {
+                    console.error("Invalid time string:", timeString);
+                    return null;
+                }
+
+                // Extract date components
+                const dateParts = dateString.split('-');
+                const year = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]) - 1; // JS months are 0-based
+                const day = parseInt(dateParts[2]);
+
+                // Handle AM/PM formats consistently
+                const upperTimeStr = timeString.toUpperCase();
+                const isPM = upperTimeStr.includes('PM');
+                const isAM = upperTimeStr.includes('AM');
+
+                // Extract hours and minutes, removing AM/PM
+                let timeParts = upperTimeStr.replace(/\s*[AP]M\s*$/i, '').trim().split(':');
+                let hours = parseInt(timeParts[0]);
+                let minutes = parseInt(timeParts[1] || '0');
+
+                // Adjust hours for 12-hour format
+                if (isPM && hours < 12) hours += 12;
+                if (isAM && hours === 12) hours = 0;
+
+                // Construct date in user's timezone
+                const date = new Date(year, month, day, hours, minutes, 0, 0);
+
+                console.log(`Parsed "${dateString} ${timeString}" to:`,
+                           date.toISOString(), "Hours:", hours, "Minutes:", minutes);
+
+                return date;
+            } catch (error) {
+                console.error(`Error parsing time "${timeString}" on date "${dateString}":`, error);
+                return null;
+            }
+        }
+
+        // Format date into an English-friendly format
+        function formatDate(dateStr) {
+            try {
+                const options = {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                };
+                const dateObj = new Date(dateStr);
+                return dateObj.toLocaleDateString('en-US', options);
+            } catch (error) {
+                console.error("Error formatting date:", error);
+                return dateStr; // Fallback
+            }
+        }
+
+        // Format time into a consistent 12-hour format
+        function formatTime(timeStr) {
+            if (!timeStr) return "N/A";
+
+            try {
+                let hours, minutes;
+                // Check if timeStr already contains AM/PM
+                if (/AM|PM/i.test(timeStr)) {
+                    return timeStr; // Already in desired format
+                }
+
+                [hours, minutes] = timeStr.split(':').map(Number);
+
+                const period = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12; // Convert to 12-hour format
+
+                return `${hours}:${minutes.toString().padStart(2, '0')} ${period}`;
+            } catch (error) {
+                console.error("Error formatting time:", error);
+                return timeStr; // Return original if there's an error
+            }
+        }
+
+        // Helper: Convert date string (e.g., "March 6") to an ISO date
+        function getISOFromItem(item) {
+            try {
+                if (!item || !item.date) {
+                    console.error("Invalid item for date conversion:", item);
+                    return "";
+                }
+
+                // Use 2025 specifically for ramadan2025.json
+                const year = 2025;
+                const dateStr = `${item.date}, ${year}`;
+                return new Date(dateStr).toISOString().split('T')[0];
+            } catch (error) {
+                console.error("Error converting date:", error);
+                return "";
+            }
+        }
+
+        // Improved countdown function
+        let countdownInterval = null;
+        function startCountdown(targetTime) {
+            if (!targetTime || isNaN(targetTime.getTime())) {
+                console.error("Invalid target time for countdown:", targetTime);
+                return;
+            }
+
+            // Clear existing interval
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+
+            function updateCountdown() {
+                try {
+                    const now = getDhakaNow();
+                    const diff = targetTime - now;
+
+                    // Debug information
+                    console.log("Countdown:", {
+                        target: targetTime.toISOString(),
+                        now: now.toISOString(),
+                        diff_ms: diff,
+                        diff_hours: diff / (1000 * 60 * 60)
+                    });
+
+                    if (diff <= 0) {
+                        document.getElementById('countdown-hours').textContent = '00';
+                        document.getElementById('countdown-minutes').textContent = '00';
+                        document.getElementById('countdown-seconds').textContent = '00';
+                        clearInterval(countdownInterval);
+
+                        // Reload data when countdown reaches zero
+                        console.log("Countdown reached zero, reloading data...");
+                        setTimeout(loadRamadanData, 2000);
+                        return;
+                    }
+
+                    // Calculate time components
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    // Update the DOM
+                    document.getElementById('countdown-hours').textContent = String(hours).padStart(2, '0');
+                    document.getElementById('countdown-minutes').textContent = String(minutes).padStart(2, '0');
+                    document.getElementById('countdown-seconds').textContent = String(seconds).padStart(2, '0');
+                } catch (error) {
+                    console.error("Error in countdown:", error);
+                }
+            }
+
+            // Start the countdown
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        // Main function to update prayer times with enhanced error handling
+        function updatePrayerTimes(data) {
+            console.log("Updating prayer times with data:", data);
+
+            if (!data || !data.items || data.items.length < 2) {
+                console.error('Invalid data format from JSON.');
+                return;
+            }
+
+            try {
+                // Get today's and tomorrow's data
+                const today = data.items[0],
+                      tomorrow = data.items[1];
+
+                console.log("Today's data:", today);
+                console.log("Tomorrow's data:", tomorrow);
+
+                // Validate the data format
+                if (!today || !tomorrow) {
+                    console.error("Missing today or tomorrow data");
+                    return;
+                }
+
+                // Get date strings
+                const todayDateStr = today.date_for || getISOFromItem(today);
+                const tomorrowDateStr = tomorrow.date_for || getISOFromItem(tomorrow);
+
+                if (!todayDateStr || !tomorrowDateStr) {
+                    console.error("Could not determine date strings");
+                    return;
+                }
+
+                console.log("Date strings:", { todayDateStr, tomorrowDateStr });
+
+                // Build events array
+
+                const events = [];
+
+                // Add events only if time strings exist
+                if (today.fajr) {
+                    events.push({
+                        label: 'SEHRI',
+                        dateStr: todayDateStr,
+                        timeStr: today.fajr,
+                        eventDateTime: parseTime(todayDateStr, today.fajr)
+                    });
+                }
+
+                if (today.maghrib || today.maghrib_and_iftar) {
+                    events.push({
+                        label: 'IFTAR',
+                        dateStr: todayDateStr,
+                        timeStr: today.maghrib || today.maghrib_and_iftar,
+                        eventDateTime: parseTime(todayDateStr, today.maghrib || today.maghrib_and_iftar)
+                    });
+                }
+
+                if (tomorrow.fajr) {
+                    events.push({
+                        label: 'SEHRI',
+                        dateStr: tomorrowDateStr,
+                        timeStr: tomorrow.fajr,
+                        eventDateTime: parseTime(tomorrowDateStr, tomorrow.fajr)
+                    });
+                }
+
+                if (tomorrow.maghrib || tomorrow.maghrib_and_iftar) {
+                    events.push({
+                        label: 'IFTAR',
+                        dateStr: tomorrowDateStr,
+                        timeStr: tomorrow.maghrib || tomorrow.maghrib_and_iftar,
+                        eventDateTime: parseTime(tomorrowDateStr, tomorrow.maghrib || tomorrow.maghrib_and_iftar)
+                    });
+                }
+
+                // Check if we have enough events
+                if (events.length < 2) {
+                    console.error("Not enough valid events found");
+                    return;
+                }
+
+                // Get current Dhaka time
+                const now = getDhakaNow();
+                console.log("Current Dhaka time:", now);
+
+                // Filter and validate future events
+                let upcomingCandidates = events.filter(event => {
+                    if (!event.eventDateTime || isNaN(event.eventDateTime.getTime())) {
+                        console.error("Invalid event datetime:", event);
+                        return false;
+                    }
+                    return event.eventDateTime > now;
+                });
+
+                if (upcomingCandidates.length < 2) {
+                    upcomingCandidates = events;
+                }
+
+                // Sort events chronologically
+                upcomingCandidates.sort((a, b) => a.eventDateTime - b.eventDateTime);
+
+                // Get upcoming events
+                const upcomingEvent = upcomingCandidates[0];
+                const secondaryEvent = upcomingCandidates[1];
+
+                console.log("Selected events:", {
+                    upcomingEvent,
+                    secondaryEvent
+                });
+
+                // Update main event section
+                document.getElementById('main-event-label').textContent = upcomingEvent.label;
+                document.getElementById('main-event-date').textContent = formatDate(upcomingEvent.dateStr);
+                document.getElementById('main-event-time').textContent = formatTime(upcomingEvent.timeStr);
+
+                // Update secondary event section
+                document.getElementById('secondary-event-label').textContent = secondaryEvent.label;
+                document.getElementById('secondary-event-date').textContent = formatDate(secondaryEvent.dateStr);
+                document.getElementById('secondary-event-time').textContent = formatTime(secondaryEvent.timeStr);
+
+                // Start countdown toward the upcoming event
+                console.log("Starting countdown to:", upcomingEvent.eventDateTime);
+                startCountdown(upcomingEvent.eventDateTime);
+
+                // Create regular prayer times array
+                const prayerTimes = [];
+
+                // Only add prayers with valid times for today
+                if (today.fajr) prayerTimes.push({ name: "FAJR", time: today.fajr, day: "Today" });
+                if (today.zuhr) prayerTimes.push({ name: "ZUHR", time: today.zuhr, day: "Today" });
+                if (today.asr) prayerTimes.push({ name: "ASR", time: today.asr, day: "Today" });
+                if (today.maghrib || today.maghrib_and_iftar)
+                    prayerTimes.push({ name: "MAGHRIB", time: today.maghrib || today.maghrib_and_iftar, day: "Today" });
+                if (today.isha) prayerTimes.push({ name: "ISHA", time: today.isha, day: "Today" });
+
+                // Also add tomorrow's prayers
+                if (tomorrow.fajr) prayerTimes.push({ name: "FAJR", time: tomorrow.fajr, day: "Tomorrow" });
+                if (tomorrow.zuhr) prayerTimes.push({ name: "ZUHR", time: tomorrow.zuhr, day: "Tomorrow" });
+                if (tomorrow.asr) prayerTimes.push({ name: "ASR", time: tomorrow.asr, day: "Tomorrow" });
+                if (tomorrow.maghrib || tomorrow.maghrib_and_iftar)
+                    prayerTimes.push({ name: "MAGHRIB", time: tomorrow.maghrib || tomorrow.maghrib_and_iftar, day: "Tomorrow" });
+                if (tomorrow.isha) prayerTimes.push({ name: "ISHA", time: tomorrow.isha, day: "Tomorrow" });
+
+                console.log("Prayer times array:", prayerTimes);
+
+                // Process future prayers with priority for today's prayers
+                const futurePrayers = [];
+
+                // Process regular prayer times, separately tracking today's and tomorrow's
+                const todayPrayers = [];
+                const tomorrowPrayers = [];
+
+                // Map and filter prayers
+                prayerTimes.forEach(prayer => {
+                    // Skip if no time data
+                    if (!prayer.time) return;
+
+                    // Use the correct date string based on whether it's today or tomorrow
+                    const dateStr = prayer.day === "Today" ? todayDateStr : tomorrowDateStr;
+                    const dateTime = parseTime(dateStr, prayer.time);
+
+                    if (!dateTime || isNaN(dateTime.getTime())) {
+                        console.error("Invalid prayer datetime:", prayer);
+                        return;
+                    }
+
+                    const prayerData = {
+                        name: prayer.name,
+                        time: prayer.time,
+                        day: prayer.day,
+                        dateTime: dateTime,
+                        isToday: prayer.day === "Today"
+                    };
+
+                    // Check if this prayer is in the future
+                    const isFuture = dateTime > now;
+
+                    // Store in appropriate array
+                    if (prayer.day === "Today") {
+                        todayPrayers.push(prayerData);
+                        if (isFuture) futurePrayers.push(prayerData);
+                    } else {
+                        tomorrowPrayers.push(prayerData);
+                    }
+                });
+
+                // Sort arrays chronologically
+                todayPrayers.sort((a, b) => a.dateTime - b.dateTime);
+                tomorrowPrayers.sort((a, b) => a.dateTime - b.dateTime);
+                futurePrayers.sort((a, b) => a.dateTime - b.dateTime);
+
+                console.log("Today's prayers:", todayPrayers);
+                console.log("Tomorrow's prayers:", tomorrowPrayers);
+                console.log("Future prayers from today:", futurePrayers);
+
+                // ONLY add tomorrow's prayers if we don't have enough from today
+                if (futurePrayers.length < 2) {
+                    // How many more prayers do we need?
+                    const neededPrayers = 2 - futurePrayers.length;
+                    // Add only as many as needed from tomorrow
+                    futurePrayers.push(...tomorrowPrayers.slice(0, neededPrayers));
+                    console.log(`Added ${neededPrayers} prayers from tomorrow:`, futurePrayers);
+                }
+
+                // Update the prayer boxes
+                if (futurePrayers.length > 0) {
+                    document.getElementById('next-prayer-name').textContent =
+                        `${futurePrayers[0].name}${futurePrayers[0].day === "Tomorrow" ? " (Tomorrow)" : ""}`;
+                    document.getElementById('next-prayer-time').textContent = formatTime(futurePrayers[0].time);
+                } else {
+                    document.getElementById('next-prayer-name').textContent = "No more prayers";
+                    document.getElementById('next-prayer-time').textContent = "Today";
+                }
+
+                if (futurePrayers.length > 1) {
+                    document.getElementById('following-prayer-name').textContent =
+                        `${futurePrayers[1].name}${futurePrayers[1].day === "Tomorrow" ? " (Tomorrow)" : ""}`;
+                    document.getElementById('following-prayer-time').textContent = formatTime(futurePrayers[1].time);
+                } else {
+                    document.getElementById('following-prayer-name').textContent =
+                        futurePrayers.length === 1 ? "Last prayer" : "No prayers";
+                    document.getElementById('following-prayer-time').textContent =
+                        futurePrayers.length === 1 ? formatTime(futurePrayers[0].time) : "Today";
+                }
+
+            } catch (error) {
+                console.error("Error in updatePrayerTimes:", error);
+            }
+        }
+
+        // Modify the loadRamadanData function to better identify today's data
+        function loadRamadanData() {
+            console.log("Fetching ramadan2025.json...");
+            return fetch('ramadan2025.json')
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                    return response.json();
+                })
+                .then(ramadanData => {
+                    if (!Array.isArray(ramadanData) || ramadanData.length === 0) {
+                        throw new Error('Invalid data format');
+                    }
+
+                    // IMPORTANT: For testing purposes, always use the first entry as "today"
+                    // Remove this override for production
+                    const todayIndex = 0; // Force first entry to be today during testing
+                    const tomorrowIndex = 1;
+
+                    console.log(`Using fixed indices for testing: today=${todayIndex}, tomorrow=${tomorrowIndex}`);
+                    console.log("Today's data:", ramadanData[todayIndex]);
+                    console.log("Tomorrow's data:", ramadanData[tomorrowIndex]);
+
+                    updatePrayerTimes({
+                        items: [ramadanData[todayIndex], ramadanData[tomorrowIndex]]
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading ramadan2025.json:', error);
+                    alert('Failed to load prayer time data. Please check your network connection and reload the page.');
+                });
+        }
+
+        // Update current date and time display
+        function updateCurrentDateTime() {
+            try {
+                const now = getDhakaNow();
+                const dateOptions = {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                };
+                const timeOptions = {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                };
+                document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', dateOptions);
+                document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', timeOptions);
+            } catch (error) {
+                console.error("Error updating date/time:", error);
+            }
+        }
+
+        // Initialize the app
+        function init() {
+            console.log("Initializing app...");
+            try {
+                updateCurrentDateTime();
+                setInterval(updateCurrentDateTime, 1000);
+                loadRamadanData();
+
+                // Add event listeners for buttons if needed
+                document.getElementById('install-button').addEventListener('click', function() {
+                    alert('Installation feature coming soon!');
+                });
+
+                document.getElementById('credits-button').addEventListener('click', function() {
+                    alert('Created with ❤️ for Ramadan 2025');
+                });
+            } catch (error) {
+                console.error("Error in initialization:", error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
