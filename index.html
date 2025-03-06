@@ -125,6 +125,17 @@
         button {
             min-height: 44px; /* Apple recommended touch target size */
         }
+
+        /* Add these styles to your existing style block */
+        .custom-dropdown {
+            user-select: none;
+            position: relative;
+        }
+
+        .custom-dropdown .selected-display:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
     </style>
     <!-- Vercel Speed Insights & Analytics moved to end of body -->
     <!-- In the head section -->
@@ -409,7 +420,7 @@
         }
 
         // Main function to update prayer times with enhanced error handling
-        function updatePrayerTimes(data) {
+        function updatePrayerTimes(data, isStJohns = false) {
             debugLog("Updating prayer times with data for location:", selectedLocation);
 
             if (!data || !data.items || data.items.length < 2) {
@@ -446,15 +457,18 @@
 
                 const events = [];
 
-                // Add events only if time strings exist
-                if (today.fajr) {
-                    const adjustedFajr = adjustTimeForLocation(today.fajr, 'SEHRI');
+                // Add events only if time strings exist - MODIFIED to use sehri exclusively
+                if (today.sehri) {
+                    let sehriTimeDisplay = isStJohns ? today.sehriWithNote : today.sehri;
+                    const adjustedSehri = adjustTimeForLocation(today.sehri, 'SEHRI');
+
                     events.push({
                         label: 'SEHRI',
                         dateStr: todayDateStr,
-                        timeStr: adjustedFajr,
-                        originalTime: today.fajr,
-                        eventDateTime: parseTime(todayDateStr, adjustedFajr)
+                        timeStr: isStJohns ? adjustedSehri + " ±2 min" : adjustedSehri,
+                        originalTime: today.sehri,
+                        eventDateTime: parseTime(todayDateStr, adjustedSehri),
+                        displayTime: sehriTimeDisplay
                     });
                 }
 
@@ -470,14 +484,17 @@
                     });
                 }
 
-                if (tomorrow.fajr) {
-                    const adjustedFajr = adjustTimeForLocation(tomorrow.fajr, 'SEHRI');
+                if (tomorrow.sehri) {
+                    let sehriTimeDisplay = isStJohns ? tomorrow.sehriWithNote : tomorrow.sehri;
+                    const adjustedSehri = adjustTimeForLocation(tomorrow.sehri, 'SEHRI');
+
                     events.push({
                         label: 'SEHRI',
                         dateStr: tomorrowDateStr,
-                        timeStr: adjustedFajr,
-                        originalTime: tomorrow.fajr,
-                        eventDateTime: parseTime(tomorrowDateStr, adjustedFajr)
+                        timeStr: isStJohns ? adjustedSehri + " ±2 min" : adjustedSehri,
+                        originalTime: tomorrow.sehri,
+                        eventDateTime: parseTime(tomorrowDateStr, adjustedSehri),
+                        displayTime: sehriTimeDisplay
                     });
                 }
 
@@ -531,12 +548,27 @@
                 // Update main event section
                 document.getElementById('main-event-label').textContent = upcomingEvent.label;
                 document.getElementById('main-event-date').textContent = formatDate(upcomingEvent.dateStr);
-                document.getElementById('main-event-time').textContent = formatTime(upcomingEvent.timeStr);
+
+                // Using innerHTML for main event time to properly render HTML content
+                const mainEventTimeElement = document.getElementById('main-event-time');
+                if (upcomingEvent.label === 'SEHRI' && isStJohns) {
+                    // For St. John's sehri times, use styled display
+                    mainEventTimeElement.innerHTML = `${formatTime(upcomingEvent.timeStr).replace(" ±2 min", "")} <span class="text-purple-600">±2 min</span>`;
+                } else {
+                    mainEventTimeElement.textContent = formatTime(upcomingEvent.timeStr);
+                }
 
                 // Update secondary event section
                 document.getElementById('secondary-event-label').textContent = secondaryEvent.label;
                 document.getElementById('secondary-event-date').textContent = formatDate(secondaryEvent.dateStr);
-                document.getElementById('secondary-event-time').textContent = formatTime(secondaryEvent.timeStr);
+
+                const secondaryEventTimeElement = document.getElementById('secondary-event-time');
+                if (secondaryEvent.label === 'SEHRI' && isStJohns) {
+                    // For St. John's sehri times, use styled display
+                    secondaryEventTimeElement.innerHTML = `${formatTime(secondaryEvent.timeStr).replace(" ±2 min", "")} <span class="text-purple-600">±2 min</span>`;
+                } else {
+                    secondaryEventTimeElement.textContent = formatTime(secondaryEvent.timeStr);
+                }
 
                 // Start countdown toward the upcoming event
                 debugLog("Starting countdown to:", upcomingEvent.eventDateTime);
@@ -685,21 +717,43 @@
                 });
         }
 
-        // Modify the populateLocationDropdown function to include both St. John's and Klang at the end
+        // Replace the current location selector with this custom dropdown implementation
         function populateLocationDropdown() {
             if (!locationOffsets) return;
 
-            const locationSelector = document.getElementById('location-selector');
-            if (!locationSelector) return;
+            // Get container where the location selector is placed
+            const selectorContainer = document.querySelector('.mt-2.flex.justify-center');
+            if (!selectorContainer) return;
 
-            // Clear existing options except Dhaka
-            while (locationSelector.options.length > 1) {
-                locationSelector.remove(1);
-            }
+            // Remove existing selector
+            selectorContainer.innerHTML = '';
+
+            // Create custom dropdown container
+            const dropdownContainer = document.createElement('div');
+            dropdownContainer.className = 'relative custom-dropdown';
+            dropdownContainer.style.minWidth = '150px';
+
+            // Create selected display
+            const selectedDisplay = document.createElement('div');
+            selectedDisplay.className = 'bg-white border border-gray-300 rounded py-2 px-3 text-sm flex items-center justify-between cursor-pointer';
+            selectedDisplay.style.minHeight = '36px';
+            selectedDisplay.innerHTML = `<span id="selected-location">Dhaka</span><i class="fas fa-chevron-down ml-2"></i>`;
+
+            // Create dropdown options container
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'absolute z-10 bg-white border border-gray-300 rounded mt-1 py-1 w-full hidden';
+            optionsContainer.style.maxHeight = '200px';
+            optionsContainer.style.overflowY = 'auto';
+
+            // Add Dhaka option
+            const dhakaOption = document.createElement('div');
+            dhakaOption.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
+            dhakaOption.dataset.value = 'Dhaka';
+            dhakaOption.textContent = 'Dhaka';
+            optionsContainer.appendChild(dhakaOption);
 
             // Get all unique locations from both Sahri and Iftar objects
             const locations = new Set();
-
             Object.keys(locationOffsets.Sahri || {}).forEach(location => locations.add(location));
             Object.keys(locationOffsets.Iftar || {}).forEach(location => locations.add(location));
 
@@ -710,33 +764,89 @@
 
             // Add sorted locations to dropdown
             sortedLocations.forEach(location => {
-                const option = document.createElement('option');
-                option.value = location;
+                const option = document.createElement('div');
+                option.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
+                option.dataset.value = location;
                 option.textContent = location;
-                locationSelector.appendChild(option);
+                optionsContainer.appendChild(option);
             });
 
-            // Add St. John's as an option with Canadian flag
-            const stjohnsOption = document.createElement('option');
-            stjohnsOption.value = "St. John's";
-            stjohnsOption.innerHTML = `<i class="fab fa-canadian-maple-leaf text-red-600 mr-1"></i> St. John's`;
-            locationSelector.appendChild(stjohnsOption);
+            // Add St. John's with Canadian flag icon
+            const stjohnsOption = document.createElement('div');
+            stjohnsOption.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center';
+            stjohnsOption.dataset.value = "St. John's";
+            stjohnsOption.innerHTML = `<i class="fab fa-canadian-maple-leaf text-red-600 mr-2"></i> St. John's`;
+            optionsContainer.appendChild(stjohnsOption);
 
-            // Add Klang as an option with Malaysian flag
-            const klangOption = document.createElement('option');
-            klangOption.value = "Klang";
-            klangOption.innerHTML = `<i class="fas fa-flag text-blue-600 mr-1"></i> Klang 🇲🇾`;
-            locationSelector.appendChild(klangOption);
+            // Add Klang with Malaysian flag emoji
+            const klangOption = document.createElement('div');
+            klangOption.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center';
+            klangOption.dataset.value = "Klang";
+            klangOption.innerHTML = `🇲🇾 Klang`;  // Using the Malaysian flag emoji
+            optionsContainer.appendChild(klangOption);
 
-            // Set the previously selected location from localStorage
-            locationSelector.value = selectedLocation;
+            // Add elements to the DOM
+            dropdownContainer.appendChild(selectedDisplay);
+            dropdownContainer.appendChild(optionsContainer);
+            selectorContainer.appendChild(dropdownContainer);
 
-            // Add event listener for location change
-            locationSelector.addEventListener('change', function() {
-                selectedLocation = this.value;
+            // Create hidden select element for form compatibility
+            const hiddenSelect = document.createElement('select');
+            hiddenSelect.id = 'location-selector';
+            hiddenSelect.className = 'hidden';
+            hiddenSelect.innerHTML = `
+                <option value="Dhaka">Dhaka</option>
+                ${sortedLocations.map(loc => `<option value="${loc}">${loc}</option>`).join('')}
+                <option value="St. John's">St. John's</option>
+                <option value="Klang">Klang</option>
+            `;
+            selectorContainer.appendChild(hiddenSelect);
+
+            // Set the previously selected location
+            hiddenSelect.value = selectedLocation;
+
+            // Update display with selected value
+            const updateSelectedDisplay = () => {
+                const value = selectedLocation;
+                let displayText = value;
+
+                // Add icons for special locations
+                if (value === "St. John's") {
+                    selectedDisplay.querySelector('#selected-location').innerHTML =
+                        `<i class="fab fa-canadian-maple-leaf text-red-600 mr-2"></i> St. John's`;
+                } else if (value === "Klang") {
+                    selectedDisplay.querySelector('#selected-location').innerHTML =
+                        `🇲🇾 Klang`;  // Using the Malaysian flag emoji
+                } else {
+                    selectedDisplay.querySelector('#selected-location').textContent = value;
+                }
+            };
+            updateSelectedDisplay();
+
+            // Toggle dropdown
+            selectedDisplay.addEventListener('click', () => {
+                optionsContainer.classList.toggle('hidden');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!dropdownContainer.contains(e.target)) {
+                    optionsContainer.classList.add('hidden');
+                }
+            });
+
+            // Handle option selection
+            optionsContainer.addEventListener('click', (e) => {
+                const option = e.target.closest('div[data-value]');
+                if (!option) return;
+
+                selectedLocation = option.dataset.value;
+                hiddenSelect.value = selectedLocation;
                 localStorage.setItem('selectedLocation', selectedLocation);
+                updateSelectedDisplay();
+                optionsContainer.classList.add('hidden');
 
-                // Check if special location is selected and load appropriate data
+                // Load appropriate data
                 if (selectedLocation === "St. John's") {
                     loadStJohnsData();
                 } else if (selectedLocation === "Klang") {
@@ -745,6 +855,21 @@
                     loadRamadanData();
                 }
             });
+
+            // Add keyboard navigation
+            dropdownContainer.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    if (e.target === selectedDisplay) {
+                        optionsContainer.classList.toggle('hidden');
+                        e.preventDefault();
+                    }
+                } else if (e.key === 'Escape') {
+                    optionsContainer.classList.add('hidden');
+                }
+            });
+
+            // Add focus styles
+            selectedDisplay.tabIndex = 0;
         }
 
         // Function to adjust time based on location offset
@@ -878,7 +1003,7 @@
             }
         }
 
-        // Function to load St. John's data
+        // Fix the raw HTML tags showing in St. John's data
         function loadStJohnsData() {
             debugLog("Fetching St. John's prayer time data...");
             const errorDisplay = document.getElementById('error-display');
@@ -910,6 +1035,7 @@
                     const today = prayerData[todayIndex];
                     const tomorrow = prayerData[todayIndex + 1];
 
+                    // Use only sehri field, not fajr
                     // Format data for updatePrayerTimes function
                     const data = {
                         items: [
@@ -918,29 +1044,33 @@
                                 date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`,
                                 month: today.month,
                                 day: today.day,
-                                fajr: today.sehri || today.fajr,
+                                sehri: today.sehri,  // Only use sehri, not fajr
+                                fajr: today.fajr,
                                 zuhr: today.zuhr,
                                 asr: today.asr,
                                 maghrib: today.maghrib,
                                 maghrib_and_iftar: today.maghrib_and_iftar,
-                                isha: today.isha
+                                isha: today.isha,
+                                sehriWithNote: today.sehri + " ±2 min"  // New property for display with note
                             },
                             {
                                 date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.day).padStart(2, '0')}`,
                                 month: tomorrow.month,
                                 day: tomorrow.day,
-                                fajr: tomorrow.sehri || tomorrow.fajr,
+                                sehri: tomorrow.sehri,  // Only use sehri, not fajr
+                                fajr: tomorrow.fajr,
                                 zuhr: tomorrow.zuhr,
                                 asr: tomorrow.asr,
                                 maghrib: tomorrow.maghrib,
                                 maghrib_and_iftar: tomorrow.maghrib_and_iftar,
-                                isha: tomorrow.isha
+                                isha: tomorrow.isha,
+                                sehriWithNote: tomorrow.sehri + " ±2 min"  // New property for display with note
                             }
                         ]
                     };
 
                     // Update the UI with St. John's data
-                    updatePrayerTimes(data);
+                    updatePrayerTimes(data, true);  // Added a flag for St. John's special handling
                     return data;
                 })
                 .catch(error => {
@@ -992,7 +1122,8 @@
                                 date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`,
                                 month: today.month,
                                 day: today.day,
-                                fajr: today.sehri || today.fajr,
+                                sehri: today.sehri, // Only use sehri, not falling back to fajr
+                                fajr: today.fajr,
                                 zuhr: today.zuhr,
                                 asr: today.asr,
                                 maghrib: today.maghrib,
@@ -1003,7 +1134,8 @@
                                 date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.day).padStart(2, '0')}`,
                                 month: tomorrow.month,
                                 day: tomorrow.day,
-                                fajr: tomorrow.sehri || tomorrow.fajr,
+                                sehri: tomorrow.sehri, // Only use sehri, not falling back to fajr
+                                fajr: tomorrow.fajr,
                                 zuhr: tomorrow.zuhr,
                                 asr: tomorrow.asr,
                                 maghrib: tomorrow.maghrib,
@@ -1183,24 +1315,26 @@
 
         // Add the missing install instructions function
         function showInstallInstructions() {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isAndroid = /Android/.test(navigator.userAgent);
-
-            // Create a modern-looking overlay
+            // Create modal overlay
             const overlay = document.createElement('div');
             overlay.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
 
-            let content = `
-                <div class="bg-white p-6 rounded-lg max-w-sm text-center">
-                    <h3 class="text-xl font-bold mb-4">Install Salah-N-Saum</h3>
-                    <p class="text-amber-600 font-medium mb-4">Install feature coming soon.<br> For now you can try:</p>`;
+            // Detect device type
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+            let content = `
+                <div class="bg-white p-6 rounded-lg max-w-sm">
+                    <h3 class="text-xl font-bold mb-2">Install Instructions</h3>
+            `;
+
+            // Different instructions based on device
             if (isAndroid) {
                 content += `
                     <div class="mb-4 bg-gray-50 p-4 rounded-lg shadow-inner text-left">
                         <div class="flex items-center mb-3">
                             <div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">1</div>
-                            <p>Tap the menu button <i class="fas fa-ellipsis-v"></i> in the top right</p>
+                            <p>Tap the menu icon (⋮) in the top right</p>
                         </div>
                         <div class="flex items-center mb-3">
                             <div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">2</div>
