@@ -14,6 +14,10 @@
     <meta name="apple-mobile-web-app-title" content="Salah-N-Saum">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <!-- Vercel Speed Insights -->
+    <script defer src="https://unpkg.com/@vercel/speed-insights"></script>
+    <!-- Vercel Analytics -->
+    <script defer src="https://unpkg.com/@vercel/analytics"></script>
     <style>
         /* Removed custom font and text outline styles */
         body {
@@ -22,10 +26,12 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            background-attachment: fixed;
+            background-attachment: fixed; /* This is already correct, ensuring it's not overridden */
             font-family: 'Nunito', system-ui, -apple-system, sans-serif;
             /* Better touch behavior on iOS */
             -webkit-tap-highlight-color: transparent;
+            /* Add padding to the top of the page */
+            padding-top: 16px;
         }
 
         /* Enhanced readability for text on semi-transparent backgrounds */
