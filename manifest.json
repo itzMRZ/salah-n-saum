@@ -4,7 +4,7 @@
   "description": "Track prayer times, sehri and iftar",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#bc824f",
+  "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "portrait",
   "scope": "/",
