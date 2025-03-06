@@ -14,49 +14,70 @@
     <meta name="apple-mobile-web-app-title" content="Salah-N-Saum">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
-    <!-- Vercel Speed Insights -->
-    <script defer src="https://unpkg.com/@vercel/speed-insights"></script>
-    <!-- Vercel Analytics -->
-    <script defer src="https://unpkg.com/@vercel/analytics"></script>
     <style>
+        /* Fixed background solution for mobile browsers */
+        .fixed-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Dimming overlay */
+        .bg-dimmer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.2); /* Slight dim */
+            z-index: -1;
+        }
+
         /* Removed custom font and text outline styles */
         body {
             /* Default background color while images load */
             background-color: #1a365d;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed; /* This is already correct, ensuring it's not overridden */
             font-family: 'Nunito', system-ui, -apple-system, sans-serif;
             /* Better touch behavior on iOS */
             -webkit-tap-highlight-color: transparent;
             /* Add padding to the top of the page */
             padding-top: 16px;
+            /* Make sure content is positioned above our fixed background */
+            position: relative;
+            z-index: 1;
         }
 
-        /* Enhanced readability for text on semi-transparent backgrounds */
+        /* Rest of your styles remain the same */
         .text-enhanced {
             font-weight: 600; /* Semi-bold for better contrast without outlines */
         }
 
-        /* Improve location selector touchability */
         #location-selector {
             height: 36px; /* Increased height for better touch target */
             padding: 0 10px;
         }
 
-        /* Add this to prevent content jumping during load */
         .min-h-countdown {
             min-height: 120px;
         }
 
-        /* Optimize buttons for touch */
         button {
             min-height: 44px; /* Apple recommended touch target size */
         }
     </style>
+    <!-- Vercel Speed Insights & Analytics moved to end of body -->
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen bg-gray-800 bg-opacity-50">
+<body class="flex flex-col items-center justify-center min-h-screen">
+    <!-- Fixed background elements -->
+    <div class="fixed-bg" id="bg-image"></div>
+    <div class="bg-dimmer"></div>
+
+    <!-- Rest of your HTML content remains the same -->
     <!-- Current Date & Time Section -->
     <div id="current-datetime" class="bg-white bg-opacity-75 rounded-lg p-2 text-center w-11/12 mb-4">
         <p class="text-xl font-bold text-enhanced" id="current-date">Loading date...</p>
@@ -812,7 +833,7 @@
         // Replace the current DOMContentLoaded event handler with this improved version
         document.addEventListener('DOMContentLoaded', function() {
             // Set background image directly from remote URL without checking for local file
-            document.body.style.backgroundImage = 'url("https://i.postimg.cc/nV1FyY2P/download-3.jpg")';
+            document.getElementById('bg-image').style.backgroundImage = 'url("https://i.postimg.cc/nV1FyY2P/download-3.jpg")';
 
             // Rest of your DOMContentLoaded logic
             let loadingTimer = setTimeout(() => {
@@ -850,17 +871,18 @@
         function loadBackgroundImage() {
             const localImage = 'bmimg.jpg';
             const remoteImage = 'https://i.postimg.cc/nV1FyY2P/download-3.jpg';
+            const bgElement = document.getElementById('bg-image');
 
             // Create a test image to check if local file exists
             const testImage = new Image();
             testImage.onload = function() {
                 // Local image loaded successfully, use it
-                document.body.style.backgroundImage = `url('${localImage}')`;
+                bgElement.style.backgroundImage = `url('${localImage}')`;
             };
 
             testImage.onerror = function() {
                 // Local image failed to load, use remote URL instead
-                document.body.style.backgroundImage = `url('${remoteImage}')`;
+                bgElement.style.backgroundImage = `url('${remoteImage}')`;
             };
 
             // Start loading the test image
@@ -1008,5 +1030,13 @@
             });
         }
     </script>
+    <script>
+        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+      </script>
+      <script defer src="/_vercel/speed-insights/script.js"></script>
+      <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+      </script>
+      <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
