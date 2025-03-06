@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <!-- Added Google Fonts for Nunito - a rounded, easy-on-the-eyes font -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <meta name="theme-color" content="#4a5568">
+    <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Salah-N-Saum">
@@ -44,6 +44,12 @@
             z-index: -2;
             background-size: cover;
             background-position: center;
+            background-attachment: scroll; /* Prevents zooming on scroll */
+            transform: translateZ(0); /* Forces hardware acceleration */
+            -webkit-overflow-scrolling: touch; /* Improves iOS scrolling */
+            -webkit-backface-visibility: hidden; /* Reduces flickering */
+            backface-visibility: hidden;
+            will-change: transform; /* Optimizes for animations */
         }
 
         /* Dimming overlay */
@@ -55,6 +61,9 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.2); /* Slight dim */
             z-index: -1;
+            transform: translateZ(0);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
 
         /* Removed custom font and text outline styles */
