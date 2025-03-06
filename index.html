@@ -38,72 +38,56 @@
     <meta property="twitter:image" content="https://salah-n-saum.itzmrz.xyz/image.jpg">
 
     <style>
-        /* Prevent overscroll and fix resizing issues */
+        /* Improved scrolling solution */
         html, body {
             height: 100%;
-            width: 100%;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
-            /* Prevent bouncing/overscroll on iOS */
-            position: fixed;
-            overflow-y: scroll;
-            -webkit-overflow-scrolling: touch;
+            background-color: #000000; /* Was #bc824f */
+            font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Fixed background solution for mobile browsers */
+        /* Fixed background that won't scroll or resize with address bar */
         .fixed-bg {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
             z-index: -2;
             background-size: cover;
             background-position: center;
-            background-attachment: scroll; /* Prevents zooming on scroll */
-            transform: translateZ(0); /* Forces hardware acceleration */
-            -webkit-overflow-scrolling: touch; /* Improves iOS scrolling */
-            -webkit-backface-visibility: hidden; /* Reduces flickering */
-            backface-visibility: hidden;
-            will-change: transform; /* Optimizes for animations */
+            background-repeat: no-repeat;
+            transform: translateZ(0);
+            will-change: transform;
+            height: 100vh; /* Use vh instead of % */
+            height: 100dvh; /* Dynamic viewport height (modern browsers) */
         }
 
-        /* Main content container that properly fills the viewport */
-        .content-container {
-            min-height: 101vh; /* Slightly taller than viewport to prevent bounce */
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 16px;
-            padding-bottom: 32px; /* Extra padding at bottom to prevent seeing background */
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Dimming overlay */
+        /* Dimming overlay with same treatment */
         .bg-dimmer {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.2); /* Slight dim */
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.2);
             z-index: -1;
-            transform: translateZ(0);
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
+            height: 100vh;
+            height: 100dvh;
         }
 
-        /* Default background color that extends beyond content */
-        body {
-            /* Default background color while images load - was #bc824f */
-            background-color: #000000;
-            font-family: 'Nunito', system-ui, -apple-system, sans-serif;
-            /* Better touch behavior on iOS */
-            -webkit-tap-highlight-color: transparent;
-            /* Remove padding-top as it's now in content-container */
+        /* Main content container */
+        .content-container {
+            min-height: 100vh;
+            min-height: 100dvh; /* Dynamic viewport height */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0 50px 0; /* Extra padding at bottom */
             position: relative;
             z-index: 1;
         }
