@@ -551,11 +551,12 @@
 
                 // Using innerHTML for main event time to properly render HTML content
                 const mainEventTimeElement = document.getElementById('main-event-time');
-                if (upcomingEvent.label === 'SEH') {
-                    if (isStJohns) {
-                        mainEventTimeElement.innerHTML = `${formatTime(upcomingEvent.timeStr).replace(" ±2 min", "")} <span class="text-purple-600">±2 min</span>`;
-                    } else if (selectedLocation === "Klang") {
-                        mainEventTimeElement.innerHTML = `${formatTime(upcomingEvent.timeStr).replace(" ±2 min", "")} <span class="text-purple-600 text-xs">±2 min</span>`;
+                if (upcomingEvent.label === 'SEHRI') {
+                    if (isStJohns || selectedLocation === "Klang") {
+                        // Show ±2 min as purple superscript-like text for both St. John's and Klang
+                        mainEventTimeElement.innerHTML =
+                            `${formatTime(upcomingEvent.timeStr).replace(" ±2 min", "")}
+                             <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
                     } else {
                         mainEventTimeElement.textContent = formatTime(upcomingEvent.timeStr);
                     }
@@ -569,10 +570,11 @@
 
                 const secondaryEventTimeElement = document.getElementById('secondary-event-time');
                 if (secondaryEvent.label === 'SEHRI') {
-                    if (isStJohns) {
-                        secondaryEventTimeElement.innerHTML = `${formatTime(secondaryEvent.timeStr).replace(" ±2 min", "")} <span class="text-purple-600">±2 min</span>`;
-                    } else if (selectedLocation === "Klang") {
-                        secondaryEventTimeElement.innerHTML = `${formatTime(secondaryEvent.timeStr).replace(" ±2 min", "")} <span class="text-purple-600 text-xs">±2 min</span>`;
+                    if (isStJohns || selectedLocation === "Klang") {
+                        // Show ±2 min as purple superscript-like text for both St. John's and Klang
+                        secondaryEventTimeElement.innerHTML =
+                            `${formatTime(secondaryEvent.timeStr).replace(" ±2 min", "")}
+                             <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
                     } else {
                         secondaryEventTimeElement.textContent = formatTime(secondaryEvent.timeStr);
                     }
@@ -668,7 +670,14 @@
                 if (futurePrayers.length > 0) {
                     document.getElementById('next-prayer-name').textContent =
                         `${futurePrayers[0].name}${futurePrayers[0].day === "Tomorrow" ? " (Tomorrow)" : ""}`;
-                    document.getElementById('next-prayer-time').textContent = formatTime(futurePrayers[0].time);
+                    if (futurePrayers.length > 0 && futurePrayers[0].name === "FAJR" &&
+                        (isStJohns || selectedLocation === "Klang")) {
+                        document.getElementById('next-prayer-time').innerHTML =
+                            `${formatTime(futurePrayers[0].time)}
+                             <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
+                    } else {
+                        document.getElementById('next-prayer-time').textContent = formatTime(futurePrayers[0].time);
+                    }
                 } else {
                     document.getElementById('next-prayer-name').textContent = "No more prayers";
                     document.getElementById('next-prayer-time').textContent = "Today";
@@ -677,7 +686,14 @@
                 if (futurePrayers.length > 1) {
                     document.getElementById('following-prayer-name').textContent =
                         `${futurePrayers[1].name}${futurePrayers[1].day === "Tomorrow" ? " (Tomorrow)" : ""}`;
-                    document.getElementById('following-prayer-time').textContent = formatTime(futurePrayers[1].time);
+                    if (futurePrayers.length > 1 && futurePrayers[1].name === "FAJR" &&
+                        (isStJohns || selectedLocation === "Klang")) {
+                        document.getElementById('following-prayer-time').innerHTML =
+                            `${formatTime(futurePrayers[1].time)}
+                             <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
+                    } else if (futurePrayers.length > 1) {
+                        document.getElementById('following-prayer-time').textContent = formatTime(futurePrayers[1].time);
+                    }
                 } else {
                     document.getElementById('following-prayer-name').textContent =
                         futurePrayers.length === 1 ? "Last prayer" : "No prayers";
