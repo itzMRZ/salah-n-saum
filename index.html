@@ -377,7 +377,8 @@
 
             function updateCountdown() {
                 try {
-                    const now = getDhakaNow();
+                    // CHANGE: Use current location time instead of Dhaka time
+                    const now = getCurrentLocationTime();
                     const diff = targetTime - now;
 
                     // Debug information
@@ -516,9 +517,9 @@
                     return;
                 }
 
-                // Get current Dhaka time
-                const now = getDhakaNow();
-                debugLog("Current Dhaka time:", now);
+                // Get current time based on selected location
+                const now = getCurrentLocationTime();
+                debugLog("Current time for " + selectedLocation + ":", now);
 
                 // Filter and validate future events
                 let upcomingCandidates = events.filter(event => {
@@ -708,7 +709,8 @@
 
         // Function to match current date to prayer time data
         function findTodaysPrayerData(prayerData) {
-            const now = getDhakaNow();
+            // CHANGE: Use current location time instead of Dhaka time
+            const now = getCurrentLocationTime();
             const currentMonth = now.toLocaleString('en-US', { month: 'long' });
             const currentDay = now.getDate();
 
@@ -848,7 +850,6 @@
                 }
             };
             updateSelectedDisplay();
-
             // Toggle dropdown
             selectedDisplay.addEventListener('click', () => {
                 optionsContainer.classList.toggle('hidden');
@@ -871,6 +872,9 @@
                 localStorage.setItem('selectedLocation', selectedLocation);
                 updateSelectedDisplay();
                 optionsContainer.classList.add('hidden');
+
+                // Update the current date/time display immediately for the new location
+                updateCurrentDateTime();
 
                 // Load appropriate data
                 if (selectedLocation === "St. John's") {
@@ -1042,7 +1046,7 @@
                 })
                 .then(prayerData => {
                     // Find today's and tomorrow's prayer data
-                    const now = new Date();
+                    const now = getCurrentLocationTime();
                     const currentMonth = now.toLocaleString('en-US', { month: 'long' });
                     const currentDay = now.getDate();
 
@@ -1122,7 +1126,7 @@
                 })
                 .then(prayerData => {
                     // Find today's and tomorrow's prayer data
-                    const now = new Date();
+                    const now = getCurrentLocationTime();
                     const currentMonth = now.toLocaleString('en-US', { month: 'long' });
                     const currentDay = now.getDate();
 
@@ -1188,21 +1192,37 @@
         // Update current date and time display
         function updateCurrentDateTime() {
             try {
-                const now = getDhakaNow();
+                const now = getCurrentLocationTime(); // Use location-specific time
+
                 const dateOptions = {
                     weekday: 'long',
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric'
                 };
+
                 const timeOptions = {
                     hour: 'numeric',
                     minute: '2-digit',
                     second: '2-digit',
                     hour12: true
                 };
+
                 document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', dateOptions);
                 document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', timeOptions);
+
+                // Add location name to the time display
+                const locationDisplay = document.getElementById('location-time-display');
+                if (!locationDisplay) {
+                    const timeElement = document.getElementById('current-time');
+                    const locationSpan = document.createElement('span');
+                    locationSpan.id = 'location-time-display';
+                    locationSpan.className = 'text-sm text-gray-600 block';
+                    locationSpan.textContent = `${selectedLocation} Time`;
+                    timeElement.parentNode.insertBefore(locationSpan, timeElement.nextSibling);
+                } else {
+                    locationDisplay.textContent = `${selectedLocation} Time`;
+                }
             } catch (error) {
                 console.error("Error updating date/time:", error);
             }
@@ -1426,6 +1446,67 @@
             document.getElementById('close-instructions').addEventListener('click', function() {
                 document.body.removeChild(overlay);
             });
+        }
+
+        // Replace getDhakaNow with a more flexible function that returns the time
+        // for the currently selected location
+        function getCurrentLocationTime() {
+            try {
+                let timeZone;
+
+                // Select appropriate timezone based on location
+                if (selectedLocation === "St. John's") {
+                    timeZone = 'America/St_Johns';  // Newfoundland timezone
+                } else if (selectedLocation === "Klang") {
+                    timeZone = 'Asia/Kuala_Lumpur'; // Malaysia timezone
+                } else {
+                    timeZone = 'Asia/Dhaka';        // Default Bangladesh timezone
+                }
+
+                return new Date(new Date().toLocaleString('en-US', { timeZone: timeZone }));
+            } catch (error) {
+                console.error(`Error getting time for ${selectedLocation}:`, error);
+                return new Date(); // Fallback to browser's local time
+            }
+        }
+
+        // Update the current date and time display function to use the new location-aware time function
+        function updateCurrentDateTime() {
+            try {
+                const now = getCurrentLocationTime(); // Use location-specific time
+
+                const dateOptions = {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                };
+
+                const timeOptions = {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                };
+
+                document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', dateOptions);
+                document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', timeOptions);
+
+                // Add location name to the time display
+                const locationDisplay = document.getElementById('location-time-display');
+                if (!locationDisplay) {
+                    const timeElement = document.getElementById('current-time');
+                    const locationSpan = document.createElement('span');
+                    locationSpan.id = 'location-time-display';
+                    locationSpan.className = 'text-sm text-gray-600 block';
+                    locationSpan.textContent = `${selectedLocation} Time`;
+                    timeElement.parentNode.insertBefore(locationSpan, timeElement.nextSibling);
+                } else {
+                    locationDisplay.textContent = `${selectedLocation} Time`;
+                }
+            } catch (error) {
+                console.error("Error updating date/time:", error);
+            }
         }
     </script>
     <script defer src="/_vercel/speed-insights/script.js"></script>
