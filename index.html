@@ -45,28 +45,28 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
-            /* Prevent bouncing/overscroll on iOS */
-            position: fixed;
-            overflow-y: scroll;
-            -webkit-overflow-scrolling: touch;
+            /* Remove fixed positioning that causes issues */
+            position: relative;
+            background-color: #000000; /* was #bc824f */
         }
 
-        /* Fixed background solution for mobile browsers */
+        /* Improved fixed background that won't respond to scrolling */
         .fixed-bg {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: -5%; /* Slight zoom effect by positioning outside viewport */
+            left: -5%;
+            width: 110%; /* Larger than viewport to allow for zoom */
+            height: 110%;
             z-index: -2;
+            background-image: url('https://i.postimg.cc/256BHQts/download-3-2.jpg');
             background-size: cover;
             background-position: center;
-            background-attachment: scroll; /* Prevents zooming on scroll */
-            transform: translateZ(0); /* Forces hardware acceleration */
-            -webkit-overflow-scrolling: touch; /* Improves iOS scrolling */
-            -webkit-backface-visibility: hidden; /* Reduces flickering */
+            /* Remove background-attachment which can cause scroll issues */
+            transform: translate3d(0,0,0); /* Use 3D transform for hardware acceleration */
+            -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            will-change: transform; /* Optimizes for animations */
+            /* Prevent any changes to the background after load */
+            will-change: transform;
         }
 
         /* Main content container that properly fills the viewport */
@@ -890,10 +890,7 @@
 
         // Replace the current DOMContentLoaded event handler with this improved version
         document.addEventListener('DOMContentLoaded', function() {
-            // Set background image directly from remote URL without checking for local file
-            document.getElementById('bg-image').style.backgroundImage = 'url("https://i.postimg.cc/nV1FyY2P/download-3.jpg")';
-
-            // Rest of your DOMContentLoaded logic
+            // Rest of your initialization...
             let loadingTimer = setTimeout(() => {
                 const loadingIndicator = document.createElement('div');
                 loadingIndicator.id = 'loading-indicator';
@@ -924,31 +921,6 @@
                 }
             }, 5000); // Shorter timeout (5s instead of 10s)
         });
-
-        // Background image fallback system
-        function loadBackgroundImage() {
-            const localImage = 'bmimg.jpg';
-            const remoteImage = 'https://i.postimg.cc/nV1FyY2P/download-3.jpg';
-            const bgElement = document.getElementById('bg-image');
-
-            // Create a test image to check if local file exists
-            const testImage = new Image();
-            testImage.onload = function() {
-                // Local image loaded successfully, use it
-                bgElement.style.backgroundImage = `url('${localImage}')`;
-            };
-
-            testImage.onerror = function() {
-                // Local image failed to load, use remote URL instead
-                bgElement.style.backgroundImage = `url('${remoteImage}')`;
-            };
-
-            // Start loading the test image
-            testImage.src = localImage;
-        }
-
-        // Run the background image loader after DOM is loaded
-        document.addEventListener('DOMContentLoaded', loadBackgroundImage);
 
         // Add this new function to set up all button handlers
         function setupButtonHandlers() {
