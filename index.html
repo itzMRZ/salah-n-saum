@@ -2,88 +2,158 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iftar Time</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Salah-N-Saum</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Jozoor&display=swap" rel="stylesheet">
+    <!-- Added Google Fonts for Nunito - a rounded, easy-on-the-eyes font -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#4a5568">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Salah-N-Saum">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <style>
+        /* Removed custom font and text outline styles */
         body {
-            background-image: url('https://i.postimg.cc/nV1FyY2P/download-3.jpg');
+            /* Default background color while images load */
+            background-color: #1a365d;
             background-size: cover;
             background-position: center;
-            font-family: 'Jozoor', sans-serif;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+            /* Better touch behavior on iOS */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Enhanced readability for text on semi-transparent backgrounds */
+        .text-enhanced {
+            font-weight: 600; /* Semi-bold for better contrast without outlines */
+        }
+
+        /* Improve location selector touchability */
+        #location-selector {
+            height: 36px; /* Increased height for better touch target */
+            padding: 0 10px;
+        }
+
+        /* Add this to prevent content jumping during load */
+        .min-h-countdown {
+            min-height: 120px;
+        }
+
+        /* Optimize buttons for touch */
+        button {
+            min-height: 44px; /* Apple recommended touch target size */
         }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen bg-gray-800 bg-opacity-50">
     <!-- Current Date & Time Section -->
     <div id="current-datetime" class="bg-white bg-opacity-75 rounded-lg p-2 text-center w-11/12 mb-4">
-        <p class="text-xl font-bold" id="current-date">Loading date...</p>
-        <p class="text-2xl" id="current-time">Loading time...</p>
+        <p class="text-xl font-bold text-enhanced" id="current-date">Loading date...</p>
+        <p class="text-2xl text-enhanced" id="current-time">Loading time...</p>
+
+        <!-- Improved location selector placement -->
+        <div class="mt-2 flex justify-center">
+            <select id="location-selector" class="bg-white border border-gray-300 rounded py-2 px-3 text-sm">
+                <option value="Dhaka" selected>Dhaka</option>
+                <!-- Other locations will be dynamically added here -->
+            </select>
+        </div>
     </div>
 
-    <!-- Main Event Section -->
-    <div id="main-event" class="bg-white bg-opacity-75 rounded-lg p-4 text-center mb-4 w-11/12">
-        <h1 class="text-2xl font-bold" id="main-event-label">Loading Event...</h1>
-        <p class="text-lg" id="main-event-date">Loading date...</p>
-        <p class="text-4xl font-bold" id="main-event-time">Loading time...</p>
-    </div>
-
-    <!-- Countdown Section -->
+    <!-- Merged Main Event and Countdown Section - Now properly centered -->
     <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center mb-4 w-11/12">
-        <h2 class="text-2xl font-bold">Countdown</h2>
-        <div class="flex justify-center items-center space-x-2 mt-2">
+        <!-- Event Details with adjusted font sizes -->
+        <h1 class="text-4xl font-bold text-enhanced" id="main-event-label">Loading Event...</h1>
+        <p class="text-sm text-enhanced" id="main-event-date">Loading date...</p>
+        <p class="text-4xl font-bold text-enhanced" id="main-event-time">Loading time...</p>
+
+        <!-- Countdown Section - Smaller numbers -->
+        <h2 class="text-2xl font-bold text-enhanced mt-4">Countdown</h2>
+        <div class="flex justify-center items-center space-x-2 mt-2 min-h-countdown">
+            <!-- Reduced text size from text-4xl to text-2xl -->
             <div class="bg-black text-white rounded-lg p-2 text-center">
-                <p class="text-4xl font-bold" id="countdown-hours">--</p>
-                <p class="text-sm">Hours</p>
+                <p class="text-2xl font-bold" id="countdown-hours">--</p>
+                <p class="text-xs">Hours</p>
             </div>
-            <p class="text-4xl font-bold">:</p>
+            <p class="text-2xl font-bold text-enhanced">:</p>
             <div class="bg-black text-white rounded-lg p-2 text-center">
-                <p class="text-4xl font-bold" id="countdown-minutes">--</p>
-                <p class="text-sm">Minutes</p>
+                <p class="text-2xl font-bold" id="countdown-minutes">--</p>
+                <p class="text-xs">Minutes</p>
             </div>
-            <p class="text-4xl font-bold">:</p>
+            <p class="text-2xl font-bold text-enhanced">:</p>
             <div class="bg-black text-white rounded-lg p-2 text-center">
-                <p class="text-4xl font-bold" id="countdown-seconds">--</p>
-                <p class="text-sm">Seconds</p>
+                <p class="text-2xl font-bold" id="countdown-seconds">--</p>
+                <p class="text-xs">Seconds</p>
             </div>
         </div>
     </div>
 
     <!-- Secondary Event Section -->
     <div id="secondary-event" class="bg-white bg-opacity-75 rounded-lg p-4 text-center mb-4 w-11/12">
-        <h2 class="text-2xl font-bold" id="secondary-event-label">Other Event</h2>
-        <p class="text-lg" id="secondary-event-date">Loading date...</p>
-        <p class="text-4xl font-bold" id="secondary-event-time">Loading time...</p>
+        <h2 class="text-3xl font-bold text-enhanced" id="secondary-event-label">Other Event</h2>
+        <p class="text-sm text-enhanced" id="secondary-event-date">Loading date...</p>
+        <p class="text-4xl font-bold text-enhanced" id="secondary-event-time">Loading time...</p>
     </div>
 
     <!-- Other Prayers Section -->
     <div class="flex justify-center space-x-4 mb-4 w-11/12">
         <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center w-1/2">
-            <p class="text-xl font-bold" id="next-prayer-name">Next Prayer</p>
-            <p class="text-lg" id="next-prayer-time">Loading...</p>
+            <p class="text-xl font-bold text-enhanced" id="next-prayer-name">Next Prayer</p>
+            <p class="text-lg text-enhanced" id="next-prayer-time">Loading...</p>
         </div>
         <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center w-1/2">
-            <p class="text-xl font-bold" id="following-prayer-name">Following Prayer</p>
-            <p class="text-lg" id="following-prayer-time">Loading...</p>
+            <p class="text-xl font-bold text-enhanced" id="following-prayer-name">Following Prayer</p>
+            <p class="text-lg text-enhanced" id="following-prayer-time">Loading...</p>
         </div>
     </div>
 
     <!-- Buttons Section -->
     <div class="flex justify-center space-x-4 w-11/12 mb-4">
-        <button class="bg-white bg-opacity-75 rounded-lg p-4 text-center flex-1 flex items-center justify-center space-x-2" id="install-button">
-            <i class="fas fa-download"></i>
+        <button class="bg-white bg-opacity-75 rounded-lg p-3 text-center flex-1 flex items-center justify-center" id="install-button">
+            <i class="fas fa-download mr-2"></i>
             <span>INSTALL</span>
         </button>
-        <button class="bg-white bg-opacity-75 rounded-lg p-4 text-center flex-1 flex items-center justify-center space-x-2" id="credits-button">
-            <i class="fas fa-plus"></i>
+        <button class="bg-white bg-opacity-75 rounded-lg p-3 text-center flex-1 flex items-center justify-center" id="credits-button">
+            <i class="fas fa-info-circle mr-2"></i>
             <span>CREDITS</span>
         </button>
     </div>
 
+    <!-- Updated footer with bold text -->
+    <footer class="w-full text-center py-2 mt-auto">
+        <a href="https://github.com/itzMRZ"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="inline-flex items-center text-sm text-black font-bold">
+            <i class="fab fa-github mr-1"></i>
+            BY MRZ
+        </a>
+    </footer>
+
     <!-- JavaScript -->
     <script>
+        // Add this near the top of your script section
+        const DEBUG = false; // Set to true only when debugging
+
+        // Create a debug-friendly logger function
+        function debugLog(...args) {
+            if (DEBUG) {
+                console.log(...args);
+            }
+        }
+
+        let deferredPrompt = null;
+        let installButtonShown = false;
+
+        // Global variables for location handling
+        let locationOffsets = null;
+        let selectedLocation = localStorage.getItem('selectedLocation') || 'Dhaka';
+
         // Helper: returns the current time in Dhaka with proper validation
         function getDhakaNow() {
             try {
@@ -125,7 +195,7 @@
                 // Construct date in user's timezone
                 const date = new Date(year, month, day, hours, minutes, 0, 0);
 
-                console.log(`Parsed "${dateString} ${timeString}" to:`,
+                debugLog(`Parsed "${dateString} ${timeString}" to:`,
                            date.toISOString(), "Hours:", hours, "Minutes:", minutes);
 
                 return date;
@@ -211,7 +281,7 @@
                     const diff = targetTime - now;
 
                     // Debug information
-                    console.log("Countdown:", {
+                    debugLog("Countdown:", {
                         target: targetTime.toISOString(),
                         now: now.toISOString(),
                         diff_ms: diff,
@@ -225,7 +295,7 @@
                         clearInterval(countdownInterval);
 
                         // Reload data when countdown reaches zero
-                        console.log("Countdown reached zero, reloading data...");
+                        debugLog("Countdown reached zero, reloading data...");
                         setTimeout(loadRamadanData, 2000);
                         return;
                     }
@@ -251,7 +321,7 @@
 
         // Main function to update prayer times with enhanced error handling
         function updatePrayerTimes(data) {
-            console.log("Updating prayer times with data:", data);
+            debugLog("Updating prayer times with data for location:", selectedLocation);
 
             if (!data || !data.items || data.items.length < 2) {
                 console.error('Invalid data format from JSON.');
@@ -263,8 +333,8 @@
                 const today = data.items[0],
                       tomorrow = data.items[1];
 
-                console.log("Today's data:", today);
-                console.log("Tomorrow's data:", tomorrow);
+                debugLog("Today's data:", today);
+                debugLog("Tomorrow's data:", tomorrow);
 
                 // Validate the data format
                 if (!today || !tomorrow) {
@@ -281,7 +351,7 @@
                     return;
                 }
 
-                console.log("Date strings:", { todayDateStr, tomorrowDateStr });
+                debugLog("Date strings:", { todayDateStr, tomorrowDateStr });
 
                 // Build events array
 
@@ -289,38 +359,48 @@
 
                 // Add events only if time strings exist
                 if (today.fajr) {
+                    const adjustedFajr = adjustTimeForLocation(today.fajr, 'SEHRI');
                     events.push({
                         label: 'SEHRI',
                         dateStr: todayDateStr,
-                        timeStr: today.fajr,
-                        eventDateTime: parseTime(todayDateStr, today.fajr)
+                        timeStr: adjustedFajr,
+                        originalTime: today.fajr,
+                        eventDateTime: parseTime(todayDateStr, adjustedFajr)
                     });
                 }
 
                 if (today.maghrib || today.maghrib_and_iftar) {
+                    const originalTime = today.maghrib || today.maghrib_and_iftar;
+                    const adjustedIftar = adjustTimeForLocation(originalTime, 'IFTAR');
                     events.push({
                         label: 'IFTAR',
                         dateStr: todayDateStr,
-                        timeStr: today.maghrib || today.maghrib_and_iftar,
-                        eventDateTime: parseTime(todayDateStr, today.maghrib || today.maghrib_and_iftar)
+                        timeStr: adjustedIftar,
+                        originalTime: originalTime,
+                        eventDateTime: parseTime(todayDateStr, adjustedIftar)
                     });
                 }
 
                 if (tomorrow.fajr) {
+                    const adjustedFajr = adjustTimeForLocation(tomorrow.fajr, 'SEHRI');
                     events.push({
                         label: 'SEHRI',
                         dateStr: tomorrowDateStr,
-                        timeStr: tomorrow.fajr,
-                        eventDateTime: parseTime(tomorrowDateStr, tomorrow.fajr)
+                        timeStr: adjustedFajr,
+                        originalTime: tomorrow.fajr,
+                        eventDateTime: parseTime(tomorrowDateStr, adjustedFajr)
                     });
                 }
 
                 if (tomorrow.maghrib || tomorrow.maghrib_and_iftar) {
+                    const originalTime = tomorrow.maghrib || tomorrow.maghrib_and_iftar;
+                    const adjustedIftar = adjustTimeForLocation(originalTime, 'IFTAR');
                     events.push({
                         label: 'IFTAR',
                         dateStr: tomorrowDateStr,
-                        timeStr: tomorrow.maghrib || tomorrow.maghrib_and_iftar,
-                        eventDateTime: parseTime(tomorrowDateStr, tomorrow.maghrib || tomorrow.maghrib_and_iftar)
+                        timeStr: adjustedIftar,
+                        originalTime: originalTime,
+                        eventDateTime: parseTime(tomorrowDateStr, adjustedIftar)
                     });
                 }
 
@@ -332,7 +412,7 @@
 
                 // Get current Dhaka time
                 const now = getDhakaNow();
-                console.log("Current Dhaka time:", now);
+                debugLog("Current Dhaka time:", now);
 
                 // Filter and validate future events
                 let upcomingCandidates = events.filter(event => {
@@ -354,7 +434,7 @@
                 const upcomingEvent = upcomingCandidates[0];
                 const secondaryEvent = upcomingCandidates[1];
 
-                console.log("Selected events:", {
+                debugLog("Selected events:", {
                     upcomingEvent,
                     secondaryEvent
                 });
@@ -370,7 +450,7 @@
                 document.getElementById('secondary-event-time').textContent = formatTime(secondaryEvent.timeStr);
 
                 // Start countdown toward the upcoming event
-                console.log("Starting countdown to:", upcomingEvent.eventDateTime);
+                debugLog("Starting countdown to:", upcomingEvent.eventDateTime);
                 startCountdown(upcomingEvent.eventDateTime);
 
                 // Create regular prayer times array
@@ -392,7 +472,7 @@
                     prayerTimes.push({ name: "MAGHRIB", time: tomorrow.maghrib || tomorrow.maghrib_and_iftar, day: "Tomorrow" });
                 if (tomorrow.isha) prayerTimes.push({ name: "ISHA", time: tomorrow.isha, day: "Tomorrow" });
 
-                console.log("Prayer times array:", prayerTimes);
+                debugLog("Prayer times array:", prayerTimes);
 
                 // Process future prayers with priority for today's prayers
                 const futurePrayers = [];
@@ -440,9 +520,9 @@
                 tomorrowPrayers.sort((a, b) => a.dateTime - b.dateTime);
                 futurePrayers.sort((a, b) => a.dateTime - b.dateTime);
 
-                console.log("Today's prayers:", todayPrayers);
-                console.log("Tomorrow's prayers:", tomorrowPrayers);
-                console.log("Future prayers from today:", futurePrayers);
+                debugLog("Today's prayers:", todayPrayers);
+                debugLog("Tomorrow's prayers:", tomorrowPrayers);
+                debugLog("Future prayers from today:", futurePrayers);
 
                 // ONLY add tomorrow's prayers if we don't have enough from today
                 if (futurePrayers.length < 2) {
@@ -450,7 +530,7 @@
                     const neededPrayers = 2 - futurePrayers.length;
                     // Add only as many as needed from tomorrow
                     futurePrayers.push(...tomorrowPrayers.slice(0, neededPrayers));
-                    console.log(`Added ${neededPrayers} prayers from tomorrow:`, futurePrayers);
+                    debugLog(`Added ${neededPrayers} prayers from tomorrow:`, futurePrayers);
                 }
 
                 // Update the prayer boxes
@@ -485,7 +565,7 @@
             const currentMonth = now.toLocaleString('en-US', { month: 'long' });
             const currentDay = now.getDate();
 
-            console.log(`Looking for ${currentMonth} ${currentDay}`);
+            debugLog(`Looking for ${currentMonth} ${currentDay}`);
 
             // Find today's entry
             const todayIndex = prayerData.findIndex(item =>
@@ -502,37 +582,161 @@
             return null;
         }
 
-        // Update the loadRamadanData function
+        // Function to load location data from add_minus.json
+        function loadLocationData() {
+            return fetch('add_minus.json')
+                .then(response => response.json())
+                .then(data => {
+                    locationOffsets = data;
+                    populateLocationDropdown();
+                    return data;
+                })
+                .catch(error => {
+                    console.error("Error loading location data:", error);
+                });
+        }
+
+        // Populate location dropdown with options from the JSON data
+        function populateLocationDropdown() {
+            if (!locationOffsets) return;
+
+            const locationSelector = document.getElementById('location-selector');
+            if (!locationSelector) return;
+
+            // Clear existing options except Dhaka
+            while (locationSelector.options.length > 1) {
+                locationSelector.remove(1);
+            }
+
+            // Get all unique locations from both Sahri and Iftar objects
+            const locations = new Set();
+
+            Object.keys(locationOffsets.Sahri || {}).forEach(location => locations.add(location));
+            Object.keys(locationOffsets.Iftar || {}).forEach(location => locations.add(location));
+
+            // Convert to array, remove Dhaka, and sort alphabetically
+            const sortedLocations = Array.from(locations)
+                .filter(location => location !== 'Dhaka')
+                .sort((a, b) => a.localeCompare(b));
+
+            // Add sorted locations to dropdown
+            sortedLocations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationSelector.appendChild(option);
+            });
+
+            // Set the previously selected location from localStorage
+            locationSelector.value = selectedLocation;
+
+            // Add event listener for location change
+            locationSelector.addEventListener('change', function() {
+                selectedLocation = this.value;
+                localStorage.setItem('selectedLocation', selectedLocation);
+                // Reload data with new location
+                loadRamadanData();
+            });
+        }
+
+        // Function to adjust time based on location offset
+        function adjustTimeForLocation(timeString, eventType) {
+            if (!locationOffsets || selectedLocation === 'Dhaka' || !timeString) {
+                return timeString; // No adjustment needed for Dhaka
+            }
+
+            try {
+                // Get the offset for the selected location (e.g., "+5 min", "-3 min")
+                const offsetType = eventType === 'SEHRI' ? 'Sahri' : 'Iftar';
+                const offsetString = locationOffsets[offsetType][selectedLocation];
+
+                if (!offsetString) return timeString; // No offset for this location
+
+                // Parse the offset
+                const match = offsetString.match(/([+-])(\d+)\s*min/);
+                if (!match) return timeString;
+
+                const sign = match[1] === '+' ? 1 : -1;
+                const minutes = parseInt(match[2]) * sign;
+
+                // Parse the time string
+                const isAM = timeString.includes('AM');
+                const isPM = timeString.includes('PM');
+                const timeParts = timeString.replace(/\s*[AP]M\s*$/i, '').trim().split(':');
+                let hours = parseInt(timeParts[0]);
+                let mins = parseInt(timeParts[1]);
+
+                // Convert to 24-hour format for calculation
+                if (isPM && hours < 12) hours += 12;
+                if (isAM && hours === 12) hours = 0;
+
+                // Adjust minutes
+                let totalMinutes = hours * 60 + mins + minutes;
+
+                // Convert back to hours and minutes
+                hours = Math.floor(totalMinutes / 60) % 24;
+                mins = totalMinutes % 60;
+
+                // Convert back to 12-hour format
+                const period = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+
+                // Format the time
+                return `${hours}:${mins.toString().padStart(2, '0')} ${period}`;
+            } catch (error) {
+                console.error("Error adjusting time:", error);
+                return timeString; // Return original time on error
+            }
+        }
+
+        // Add this to the loadRamadanData function
         function loadRamadanData() {
-            console.log("Fetching prayer time data...");
-            return fetch('ramadan2025.json')  // You can rename this to a more generic name
+            debugLog("Fetching prayer time data...");
+            const errorDisplay = document.getElementById('error-display');
+            if (errorDisplay) errorDisplay.style.display = 'none';
+
+            return fetch('ramadan2025.json')
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                     return response.json();
                 })
                 .then(prayerData => {
-                    if (!Array.isArray(prayerData) || prayerData.length === 0) {
-                        throw new Error('Invalid data format');
-                    }
-
-                    // For testing, you can still use fixed indices:
-                    // const todayIndex = 0;
-                    // const tomorrowIndex = 1;
-                    // updatePrayerTimes({ items: [prayerData[todayIndex], prayerData[tomorrowIndex]] });
-
-                    // Or use dynamic date matching:
-                    const result = findTodaysPrayerData(prayerData);
-                    if (result) {
-                        updatePrayerTimes({ items: [result.today, result.tomorrow] });
+                    // Replace "Existing code..." with the actual implementation
+                    const matchedData = findTodaysPrayerData(prayerData);
+                    if (matchedData) {
+                        const data = {
+                            items: [matchedData.today, matchedData.tomorrow]
+                        };
+                        updatePrayerTimes(data);
+                        return data;
                     } else {
-                        console.warn("Could not find today's data, using first two entries");
-                        updatePrayerTimes({ items: [prayerData[0], prayerData[1]] });
+                        throw new Error("Could not find today's prayer data");
                     }
                 })
                 .catch(error => {
                     console.error('Error loading prayer time data:', error);
-                    alert('Failed to load prayer time data. Please check your network connection and reload the page.');
+                    // Show user-friendly error
+                    const errorDisplay = document.getElementById('error-display') ||
+                        createErrorElement();
+                    errorDisplay.style.display = 'flex';
+                    errorDisplay.querySelector('p').textContent =
+                        'Failed to load prayer times. Please check your connection and try again.';
+
+                    // Important: Still return a resolved promise so the chain continues
+                    return Promise.resolve();
                 });
+        }
+
+        function createErrorElement() {
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'error-display';
+            errorDiv.className = 'fixed bottom-0 left-0 right-0 bg-red-500 text-white p-2 flex justify-between items-center';
+            errorDiv.innerHTML = '<p class="flex-1">Error loading data</p><button class="px-2">✕</button>';
+            errorDiv.querySelector('button').addEventListener('click', () => {
+                errorDiv.style.display = 'none';
+            });
+            document.body.appendChild(errorDiv);
+            return errorDiv;
         }
 
         // Update getISOFromItem to work with the new format
@@ -577,28 +781,226 @@
             }
         }
 
-        // Initialize the app
+        // Update the init function to properly return a Promise
         function init() {
-            console.log("Initializing app...");
+            debugLog("Initializing app...");
             try {
                 updateCurrentDateTime();
                 setInterval(updateCurrentDateTime, 1000);
-                loadRamadanData();
 
-                // Add event listeners for buttons if needed
-                document.getElementById('install-button').addEventListener('click', function() {
-                    alert('Installation feature coming soon!');
-                });
+                // Fix button handlers
+                setupButtonHandlers();
 
-                document.getElementById('credits-button').addEventListener('click', function() {
-                    alert('Created with ❤️ for Ramadan 2025');
-                });
+                // Return the Promise chain so .then() works properly
+                return loadLocationData()
+                    .then(() => loadRamadanData());
+
+                // The rest of your init code stays the same
             } catch (error) {
                 console.error("Error in initialization:", error);
+                // Return a rejected promise so the error is properly caught
+                return Promise.reject(error);
             }
         }
 
-        document.addEventListener('DOMContentLoaded', init);
+        // Replace the current DOMContentLoaded event handler with this improved version
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set background image directly from remote URL without checking for local file
+            document.body.style.backgroundImage = 'url("https://i.postimg.cc/nV1FyY2P/download-3.jpg")';
+
+            // Rest of your DOMContentLoaded logic
+            let loadingTimer = setTimeout(() => {
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.id = 'loading-indicator';
+                loadingIndicator.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
+                loadingIndicator.innerHTML = '<div class="bg-white p-4 rounded-lg">Loading prayer times...</div>';
+                document.body.appendChild(loadingIndicator);
+            }, 500);  // Only show loading after 500ms delay
+
+            // Initialize the app
+            init().then(() => {
+                clearTimeout(loadingTimer);  // Clear the timer if data loads quickly
+                const indicator = document.getElementById('loading-indicator');
+                if (indicator) document.body.removeChild(indicator);
+            }).catch(err => {
+                clearTimeout(loadingTimer);
+                console.error("Error initializing app:", err);
+                const errorDisplay = document.getElementById('error-display') || createErrorElement();
+                errorDisplay.style.display = 'flex';
+                errorDisplay.querySelector('p').textContent = 'Failed to load prayer times. Please check your connection and try again.';
+            });
+
+            // Safety timeout shorter for better UX
+            setTimeout(() => {
+                clearTimeout(loadingTimer);
+                const indicator = document.getElementById('loading-indicator');
+                if (indicator && indicator.parentNode) {
+                    indicator.parentNode.removeChild(indicator);
+                }
+            }, 5000); // Shorter timeout (5s instead of 10s)
+        });
+
+        // Background image fallback system
+        function loadBackgroundImage() {
+            const localImage = 'bmimg.jpg';
+            const remoteImage = 'https://i.postimg.cc/nV1FyY2P/download-3.jpg';
+
+            // Create a test image to check if local file exists
+            const testImage = new Image();
+            testImage.onload = function() {
+                // Local image loaded successfully, use it
+                document.body.style.backgroundImage = `url('${localImage}')`;
+            };
+
+            testImage.onerror = function() {
+                // Local image failed to load, use remote URL instead
+                document.body.style.backgroundImage = `url('${remoteImage}')`;
+            };
+
+            // Start loading the test image
+            testImage.src = localImage;
+        }
+
+        // Run the background image loader after DOM is loaded
+        document.addEventListener('DOMContentLoaded', loadBackgroundImage);
+
+        // Add this new function to set up all button handlers
+        function setupButtonHandlers() {
+            // Install button handler
+            document.getElementById('install-button').addEventListener('click', function() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        } else {
+                            console.log('User dismissed the install prompt');
+                        }
+                        deferredPrompt = null;
+                    });
+                } else {
+                    showInstallInstructions();
+                }
+            });
+
+            // Credits button handler with additional Pinterest link
+            document.getElementById('credits-button').addEventListener('click', function() {
+                // Create modal overlay
+                const overlay = document.createElement('div');
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+
+                // Create modal content with both links
+                const content = `
+                    <div class="bg-white p-6 rounded-lg max-w-sm text-center">
+                        <h3 class="text-xl font-bold mb-4">Credits</h3>
+                        <p class="mb-4">
+                            All data on this site was fetched from the
+                            <a href="https://www.facebook.com/share/p/18iUrffarT/"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="font-bold text-inherit no-underline">
+                                Islamic Foundation, Bangladesh
+                            </a>
+                        </p>
+
+                        <hr class="my-4 border-gray-300">
+
+                        <p class="mb-4">
+                            <a href="https://www.pinterest.com/aferd0020/"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="font-bold flex items-center justify-center">
+                                <i class="fab fa-pinterest mr-2 text-red-600"></i>
+                                aferd0020
+                            </a>
+                        </p>
+
+                        <button id="close-credits" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg w-full">Close</button>
+                    </div>
+                `;
+
+                overlay.innerHTML = content;
+                document.body.appendChild(overlay);
+
+                // Add close button functionality
+                document.getElementById('close-credits').addEventListener('click', function() {
+                    document.body.removeChild(overlay);
+                });
+            });
+        }
+
+        // Add the missing install instructions function
+        function showInstallInstructions() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isAndroid = /Android/.test(navigator.userAgent);
+
+            // Create a modern-looking overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+
+            let content = `
+                <div class="bg-white p-6 rounded-lg max-w-sm text-center">
+                    <h3 class="text-xl font-bold mb-4">Install Salah-N-Saum</h3>
+                    <p class="text-amber-600 font-medium mb-4">Install feature coming soon. For now you can try:</p>`;
+
+            if (isAndroid) {
+                content += `
+                    <div class="mb-4 bg-gray-50 p-4 rounded-lg shadow-inner text-left">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">1</div>
+                            <p>Tap the menu button <i class="fas fa-ellipsis-v"></i> in the top right</p>
+                        </div>
+                        <div class="flex items-center mb-3">
+                            <div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">2</div>
+                            <p>Tap "Install app" or "Add to Home screen"</p>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">3</div>
+                            <p>Tap "Install" when prompted</p>
+                        </div>
+                    </div>`;
+            } else if (isIOS) {
+                content += `
+                    <div class="mb-4 bg-gray-50 p-4 rounded-lg shadow-inner text-left">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">1</div>
+                            <p>Tap the share button <i class="fas fa-share-square"></i> at the bottom</p>
+                        </div>
+                        <div class="flex items-center mb-3">
+                            <div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">2</div>
+                            <p>Scroll and tap "Add to Home Screen"</p>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">3</div>
+                            <p>Tap "Add" in the top right</p>
+                        </div>
+                    </div>`;
+            } else {
+                content += `
+                    <div class="mb-4 bg-gray-50 p-4 rounded-lg shadow-inner text-left">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">1</div>
+                            <p>Look for the install icon <i class="fas fa-download"></i> in the address bar</p>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">2</div>
+                            <p>Click "Install" when prompted</p>
+                        </div>
+                    </div>`;
+            }
+
+            content += `
+                    <button id="close-instructions" class="bg-blue-500 hover:bg-blue-600 transition-colors text-white py-2 px-4 rounded-lg w-full">Got it</button>
+                </div>
+            `;
+
+            overlay.innerHTML = content;
+            document.body.appendChild(overlay);
+
+            document.getElementById('close-instructions').addEventListener('click', function() {
+                document.body.removeChild(overlay);
+            });
+        }
     </script>
 </body>
 </html>
