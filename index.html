@@ -127,6 +127,8 @@
         }
     </style>
     <!-- Vercel Speed Insights & Analytics moved to end of body -->
+    <!-- In the head section -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <!-- Fixed background elements -->
@@ -683,7 +685,7 @@
                 });
         }
 
-        // Populate location dropdown with options from the JSON data
+        // Modify the populateLocationDropdown function to include both St. John's and Klang at the end
         function populateLocationDropdown() {
             if (!locationOffsets) return;
 
@@ -714,6 +716,18 @@
                 locationSelector.appendChild(option);
             });
 
+            // Add St. John's as an option with Canadian flag
+            const stjohnsOption = document.createElement('option');
+            stjohnsOption.value = "St. John's";
+            stjohnsOption.innerHTML = `<i class="fab fa-canadian-maple-leaf text-red-600 mr-1"></i> St. John's`;
+            locationSelector.appendChild(stjohnsOption);
+
+            // Add Klang as an option with Malaysian flag
+            const klangOption = document.createElement('option');
+            klangOption.value = "Klang";
+            klangOption.innerHTML = `<i class="fas fa-flag text-blue-600 mr-1"></i> Klang 🇲🇾`;
+            locationSelector.appendChild(klangOption);
+
             // Set the previously selected location from localStorage
             locationSelector.value = selectedLocation;
 
@@ -721,8 +735,15 @@
             locationSelector.addEventListener('change', function() {
                 selectedLocation = this.value;
                 localStorage.setItem('selectedLocation', selectedLocation);
-                // Reload data with new location
-                loadRamadanData();
+
+                // Check if special location is selected and load appropriate data
+                if (selectedLocation === "St. John's") {
+                    loadStJohnsData();
+                } else if (selectedLocation === "Klang") {
+                    loadKlangData();
+                } else {
+                    loadRamadanData();
+                }
             });
         }
 
@@ -782,6 +803,14 @@
             const errorDisplay = document.getElementById('error-display');
             if (errorDisplay) errorDisplay.style.display = 'none';
 
+            // Check for special locations
+            if (selectedLocation === "St. John's") {
+                return loadStJohnsData();
+            } else if (selectedLocation === "Klang") {
+                return loadKlangData();
+            }
+
+            // Original code for standard locations
             return fetch('ramadan2025.json')
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
@@ -849,6 +878,155 @@
             }
         }
 
+        // Function to load St. John's data
+        function loadStJohnsData() {
+            debugLog("Fetching St. John's prayer time data...");
+            const errorDisplay = document.getElementById('error-display');
+            if (errorDisplay) errorDisplay.style.display = 'none';
+
+            return fetch('St_Johns.json')
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                    return response.json();
+                })
+                .then(prayerData => {
+                    // Find today's and tomorrow's prayer data
+                    const now = new Date();
+                    const currentMonth = now.toLocaleString('en-US', { month: 'long' });
+                    const currentDay = now.getDate();
+
+                    debugLog(`Looking for ${currentMonth} ${currentDay} in St. John's data`);
+
+                    // Find today's entry
+                    const todayIndex = prayerData.findIndex(item =>
+                        item.month === currentMonth && item.day === currentDay
+                    );
+
+                    if (todayIndex < 0 || todayIndex >= prayerData.length - 1) {
+                        throw new Error("Could not find today's prayer data for St. John's");
+                    }
+
+                    // Get today's and tomorrow's data
+                    const today = prayerData[todayIndex];
+                    const tomorrow = prayerData[todayIndex + 1];
+
+                    // Format data for updatePrayerTimes function
+                    const data = {
+                        items: [
+                            // Use St. John's format but with key mapping for compatibility
+                            {
+                                date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`,
+                                month: today.month,
+                                day: today.day,
+                                fajr: today.sehri || today.fajr,
+                                zuhr: today.zuhr,
+                                asr: today.asr,
+                                maghrib: today.maghrib,
+                                maghrib_and_iftar: today.maghrib_and_iftar,
+                                isha: today.isha
+                            },
+                            {
+                                date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.day).padStart(2, '0')}`,
+                                month: tomorrow.month,
+                                day: tomorrow.day,
+                                fajr: tomorrow.sehri || tomorrow.fajr,
+                                zuhr: tomorrow.zuhr,
+                                asr: tomorrow.asr,
+                                maghrib: tomorrow.maghrib,
+                                maghrib_and_iftar: tomorrow.maghrib_and_iftar,
+                                isha: tomorrow.isha
+                            }
+                        ]
+                    };
+
+                    // Update the UI with St. John's data
+                    updatePrayerTimes(data);
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Error loading St. John\'s prayer time data:', error);
+                    // Show user-friendly error
+                    const errorDisplay = document.getElementById('error-display') || createErrorElement();
+                    errorDisplay.style.display = 'flex';
+                    errorDisplay.querySelector('p').textContent = 'Failed to load St. John\'s prayer times. Please check your connection and try again.';
+                    return Promise.resolve();
+                });
+        }
+
+        // Function to load Klang data
+        function loadKlangData() {
+            debugLog("Fetching Klang prayer time data...");
+            const errorDisplay = document.getElementById('error-display');
+            if (errorDisplay) errorDisplay.style.display = 'none';
+
+            return fetch('klang.json')
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                    return response.json();
+                })
+                .then(prayerData => {
+                    // Find today's and tomorrow's prayer data
+                    const now = new Date();
+                    const currentMonth = now.toLocaleString('en-US', { month: 'long' });
+                    const currentDay = now.getDate();
+
+                    debugLog(`Looking for ${currentMonth} ${currentDay} in Klang data`);
+
+                    // Find today's entry
+                    const todayIndex = prayerData.findIndex(item =>
+                        item.month === currentMonth && item.day === currentDay
+                    );
+
+                    if (todayIndex < 0 || todayIndex >= prayerData.length - 1) {
+                        throw new Error("Could not find today's prayer data for Klang");
+                    }
+
+                    // Get today's and tomorrow's data
+                    const today = prayerData[todayIndex];
+                    const tomorrow = prayerData[todayIndex + 1];
+
+                    // Format data for updatePrayerTimes function
+                    const data = {
+                        items: [
+                            {
+                                date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`,
+                                month: today.month,
+                                day: today.day,
+                                fajr: today.sehri || today.fajr,
+                                zuhr: today.zuhr,
+                                asr: today.asr,
+                                maghrib: today.maghrib,
+                                maghrib_and_iftar: today.maghrib_and_iftar,
+                                isha: today.isha
+                            },
+                            {
+                                date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.day).padStart(2, '0')}`,
+                                month: tomorrow.month,
+                                day: tomorrow.day,
+                                fajr: tomorrow.sehri || tomorrow.fajr,
+                                zuhr: tomorrow.zuhr,
+                                asr: tomorrow.asr,
+                                maghrib: tomorrow.maghrib,
+                                maghrib_and_iftar: tomorrow.maghrib_and_iftar,
+                                isha: tomorrow.isha
+                            }
+                        ]
+                    };
+
+                    // Update the UI with Klang data
+                    updatePrayerTimes(data);
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Error loading Klang prayer time data:', error);
+                    // Show user-friendly error
+                    const errorDisplay = document.getElementById('error-display') || createErrorElement();
+                    errorDisplay.style.display = 'flex';
+                    errorDisplay.querySelector('p').textContent = 'Failed to load Klang prayer times. Please check your connection and try again.';
+                    return Promise.resolve();
+                });
+        }
+
         // Update current date and time display
         function updateCurrentDateTime() {
             try {
@@ -910,6 +1088,13 @@
                 clearTimeout(loadingTimer);  // Clear the timer if data loads quickly
                 const indicator = document.getElementById('loading-indicator');
                 if (indicator) document.body.removeChild(indicator);
+
+                // Check if St. John's is already selected (from localStorage)
+                if (selectedLocation === "St. John's") {
+                    loadStJohnsData();
+                } else if (selectedLocation === "Klang") {
+                    loadKlangData();
+                }
             }).catch(err => {
                 clearTimeout(loadingTimer);
                 console.error("Error initializing app:", err);
