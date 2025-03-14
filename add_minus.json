@@ -2,6 +2,7 @@
     "Sahri": {
       "Tangail": "+1 min",
       "Barisal": "+1 min",
+      "Faridpur": "+3 min",
       "Bogra": "+3 min",
       "Rangpur": "+4 min",
       "Khulna": "+4 min",
@@ -24,6 +25,7 @@
       "Sylhet": "-7 min"
     },
     "Iftar": {
+      "Faridpur": "+2 min",
       "Tangail": "+2 min",
       "Khulna": "+3 min",
       "Bogra": "+4 min",
