@@ -474,7 +474,7 @@
                 }
 
                 if (today.maghrib || today.maghrib_and_iftar) {
-                    const originalTime = today.maghrib || today.maghrib_and_iftar;
+                    const originalTime = today.maghrib_and_iftar;
                     const adjustedIftar = adjustTimeForLocation(originalTime, 'IFTAR');
                     events.push({
                         label: 'IFTAR',
@@ -500,7 +500,7 @@
                 }
 
                 if (tomorrow.maghrib || tomorrow.maghrib_and_iftar) {
-                    const originalTime = tomorrow.maghrib || tomorrow.maghrib_and_iftar;
+                    const originalTime = tomorrow.maghrib_and_iftar;
                     const adjustedIftar = adjustTimeForLocation(originalTime, 'IFTAR');
                     events.push({
                         label: 'IFTAR',
@@ -594,16 +594,16 @@
                 if (today.fajr) prayerTimes.push({ name: "FAJR", time: today.fajr, day: "Today" });
                 if (today.zuhr) prayerTimes.push({ name: "ZUHR", time: today.zuhr, day: "Today" });
                 if (today.asr) prayerTimes.push({ name: "ASR", time: today.asr, day: "Today" });
-                if (today.maghrib || today.maghrib_and_iftar)
-                    prayerTimes.push({ name: "MAGHRIB", time: today.maghrib || today.maghrib_and_iftar, day: "Today" });
+                if (today.maghrib_and_iftar || today.maghrib  )
+                    prayerTimes.push({ name: "MAGHRIB", time: today.maghrib_and_iftar || today.maghrib, day: "Today" });
                 if (today.isha) prayerTimes.push({ name: "ISHA", time: today.isha, day: "Today" });
 
                 // Also add tomorrow's prayers
                 if (tomorrow.fajr) prayerTimes.push({ name: "FAJR", time: tomorrow.fajr, day: "Tomorrow" });
                 if (tomorrow.zuhr) prayerTimes.push({ name: "ZUHR", time: tomorrow.zuhr, day: "Tomorrow" });
                 if (tomorrow.asr) prayerTimes.push({ name: "ASR", time: tomorrow.asr, day: "Tomorrow" });
-                if (tomorrow.maghrib || tomorrow.maghrib_and_iftar)
-                    prayerTimes.push({ name: "MAGHRIB", time: tomorrow.maghrib || tomorrow.maghrib_and_iftar, day: "Tomorrow" });
+                if (tomorrow.maghrib_and_iftar || tomorrow.maghrib)
+                    prayerTimes.push({ name: "MAGHRIB", time: tomorrow.maghrib_and_iftar || tomorrow.maghrib, day: "Tomorrow" });
                 if (tomorrow.isha) prayerTimes.push({ name: "ISHA", time: tomorrow.isha, day: "Tomorrow" });
 
                 debugLog("Prayer times array:", prayerTimes);
