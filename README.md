@@ -48,7 +48,7 @@ A clean and simple solution to check iftar and sehri timings along with the next
 
 ## How It Works
 
-The application loads prayer time data from JSON file `ramadan2025.json`. It then formats the timings and updates the UI accordingly, with custom logic for special locations ( 🇲🇾 Klang & 🇨🇦 St. John's) where needed.
+The application loads prayer time data from JSON files `ramadan2025.json`, `klang.json` and `St_Johns.json`. It then formats the timings and updates the UI accordingly, with custom logic for special locations ( 🇲🇾 Klang & 🇨🇦 St. John's) where needed.
 
 ## Setup
 
@@ -60,3 +60,6 @@ The application loads prayer time data from JSON file `ramadan2025.json`. It the
 ## License
 
 See [LICENSE](./LICENSE) for details.
+
+## Warning
+This project is under development and contains some extra files that have not been removed yet for convenience.
