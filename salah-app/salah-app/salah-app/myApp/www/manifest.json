@@ -1,0 +1,18 @@
+{
+  "name": "Salah-N-Saum",
+  "short_name": "Salah-N-Saum",
+  "description": "Track prayer times, sehri and iftar",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.0.11"
+  }
+}

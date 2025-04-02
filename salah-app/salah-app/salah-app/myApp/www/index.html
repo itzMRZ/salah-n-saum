@@ -473,8 +473,8 @@
                     });
                 }
 
-                if (today.maghrib || today.iftar) {
-                    const originalTime = today.iftar;
+                if (today.maghrib || today.maghrib_and_iftar) {
+                    const originalTime = today.maghrib_and_iftar;
                     const adjustedIftar = adjustTimeForLocation(originalTime, 'IFTAR');
                     events.push({
                         label: 'IFTAR',
@@ -499,8 +499,8 @@
                     });
                 }
 
-                if (tomorrow.maghrib || tomorrow.iftar) {
-                    const originalTime = tomorrow.iftar;
+                if (tomorrow.maghrib || tomorrow.maghrib_and_iftar) {
+                    const originalTime = tomorrow.maghrib_and_iftar;
                     const adjustedIftar = adjustTimeForLocation(originalTime, 'IFTAR');
                     events.push({
                         label: 'IFTAR',
@@ -594,16 +594,16 @@
                 if (today.fajr) prayerTimes.push({ name: "FAJR", time: today.fajr, day: "Today" });
                 if (today.zuhr) prayerTimes.push({ name: "ZUHR", time: today.zuhr, day: "Today" });
                 if (today.asr) prayerTimes.push({ name: "ASR", time: today.asr, day: "Today" });
-                if (today.maghrib || today.iftar)
-                    prayerTimes.push({ name: "MAGHRIB", time: today.iftar || today.maghrib, day: "Today" });
+                if (today.maghrib_and_iftar || today.maghrib  )
+                    prayerTimes.push({ name: "MAGHRIB", time: today.maghrib_and_iftar || today.maghrib, day: "Today" });
                 if (today.isha) prayerTimes.push({ name: "ISHA", time: today.isha, day: "Today" });
 
                 // Also add tomorrow's prayers
                 if (tomorrow.fajr) prayerTimes.push({ name: "FAJR", time: tomorrow.fajr, day: "Tomorrow" });
                 if (tomorrow.zuhr) prayerTimes.push({ name: "ZUHR", time: tomorrow.zuhr, day: "Tomorrow" });
                 if (tomorrow.asr) prayerTimes.push({ name: "ASR", time: tomorrow.asr, day: "Tomorrow" });
-                if (tomorrow.iftar || tomorrow.maghrib)
-                    prayerTimes.push({ name: "MAGHRIB", time: tomorrow.iftar || tomorrow.maghrib, day: "Tomorrow" });
+                if (tomorrow.maghrib_and_iftar || tomorrow.maghrib)
+                    prayerTimes.push({ name: "MAGHRIB", time: tomorrow.maghrib_and_iftar || tomorrow.maghrib, day: "Tomorrow" });
                 if (tomorrow.isha) prayerTimes.push({ name: "ISHA", time: tomorrow.isha, day: "Tomorrow" });
 
                 debugLog("Prayer times array:", prayerTimes);
@@ -1079,7 +1079,7 @@
                                 zuhr: today.zuhr,
                                 asr: today.asr,
                                 maghrib: today.maghrib,
-                                iftar: today.maghrib_and_iftar, // Rename this property
+                                maghrib_and_iftar: today.maghrib_and_iftar,
                                 isha: today.isha,
                                 sehriWithNote: today.sehri + " ±2 min"  // New property for display with note
                             },
@@ -1092,7 +1092,7 @@
                                 zuhr: tomorrow.zuhr,
                                 asr: tomorrow.asr,
                                 maghrib: tomorrow.maghrib,
-                                iftar: tomorrow.maghrib_and_iftar, // Rename this property
+                                maghrib_and_iftar: tomorrow.maghrib_and_iftar,
                                 isha: tomorrow.isha,
                                 sehriWithNote: tomorrow.sehri + " ±2 min"  // New property for display with note
                             }
@@ -1157,7 +1157,7 @@
                                 zuhr: today.zuhr,
                                 asr: today.asr,
                                 maghrib: today.maghrib,
-                                iftar: today.maghrib_and_iftar, // Rename this property
+                                maghrib_and_iftar: today.maghrib_and_iftar,
                                 isha: today.isha
                             },
                             {
@@ -1169,7 +1169,7 @@
                                 zuhr: tomorrow.zuhr,
                                 asr: tomorrow.asr,
                                 maghrib: tomorrow.maghrib,
-                                iftar: tomorrow.maghrib_and_iftar, // Rename this property
+                                maghrib_and_iftar: tomorrow.maghrib_and_iftar,
                                 isha: tomorrow.isha
                             }
                         ]
