@@ -2,11 +2,11 @@
 
 <div align="center">
 
-[![Salah n Saum App Screenshot](https://i.ibb.co/xqfTCThg/6070bafe-6c83-4ce6-987a-d0c4b46cd841.jpg)](https://salah-n-saum.itzmrz.xyz/)
+![Salah n Saum App Screenshot](./screenshot.jpg)
 
 **🌙 [Live Demo - Try Salah n Saum Now!](https://salah-n-saum.itzmrz.xyz/) 🌙**
 
-*Click the screenshot above or the link below to experience the app live*
+*See the screenshot above or click the link to experience the app live*
 
 </div>
 
