@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Salah n Saum App Screenshot](./screenshot.jpg)
+<img src="./screenshot.jpg" alt="Salah n Saum App Screenshot" width="300px">
 
 **🌙 [Live Demo - Try Salah n Saum Now!](https://salah-n-saum.itzmrz.xyz/) 🌙**
 
