@@ -1,5 +1,15 @@
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/itzMRZ/salah-n-saum?utm_source=oss&utm_medium=github&utm_campaign=itzMRZ%2Fsalah-n-saum&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
+<div align="center">
+
+[![Salah n Saum App Screenshot](https://i.ibb.co/xqfTCThg/6070bafe-6c83-4ce6-987a-d0c4b46cd841.jpg)](https://salah-n-saum.itzmrz.xyz/)
+
+**🌙 [Live Demo - Try Salah n Saum Now!](https://salah-n-saum.itzmrz.xyz/) 🌙**
+
+*Click the screenshot above or the link below to experience the app live*
+
+</div>
+
 # Salah n Saum
 
 A clean and simple solution to check iftar and sehri timings along with the next two upcoming salah times. This project fetches prayer time data from local JSON files and offers a customizable location selection.
