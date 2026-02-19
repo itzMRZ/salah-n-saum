@@ -242,6 +242,166 @@
             }
         }
 
+        // ==================== CENTRALIZED ERROR & CACHE MANAGEMENT ====================
+        const AppCache = {
+            keys: {
+                prayerTimes: 'prayerTimesCache',
+                stjohns: 'stjohnsPrayerTimesCache',
+                klang: 'klangPrayerTimesCache',
+                location: 'selectedLocation'
+            },
+            set(key, data, ttl = 86400000) { // 24h default TTL
+                try {
+                    const item = {
+                        data: data,
+                        timestamp: Date.now(),
+                        ttl: ttl
+                    };
+                    localStorage.setItem(key, JSON.stringify(item));
+                    return true;
+                } catch (e) {
+                    console.warn('Cache write failed:', e);
+                    return false;
+                }
+            },
+            get(key) {
+                try {
+                    const item = JSON.parse(localStorage.getItem(key));
+                    if (!item) return null;
+
+                    // Check if expired
+                    if (Date.now() - item.timestamp > item.ttl) {
+                        this.remove(key);
+                        return null;
+                    }
+                    return item.data;
+                } catch (e) {
+                    console.warn('Cache read failed:', e);
+                    return null;
+                }
+            },
+            remove(key) {
+                try {
+                    localStorage.removeItem(key);
+                } catch (e) {
+                    console.warn('Cache remove failed:', e);
+                }
+            }
+        };
+
+        const ErrorHandler = {
+            currentError: null,
+
+            show(message, location = null, retryCallback = null) {
+                this.hide(); // Remove existing error
+
+                const errorDiv = document.createElement('div');
+                errorDiv.id = 'error-display';
+                errorDiv.className = 'fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4';
+                errorDiv.style.backdropFilter = 'blur(4px)';
+
+                errorDiv.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 transform transition-all">
+                        <div class="flex items-start mb-4">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Unable to Load Data</h3>
+                                <p class="text-sm text-gray-700 mb-1">${message}</p>
+                                ${location ? `<p class="text-xs text-gray-500 mt-2">Location: ${location}</p>` : ''}
+                                ${!navigator.onLine ? '<p class="text-xs text-orange-600 mt-2 font-medium">⚠️ You appear to be offline</p>' : ''}
+                            </div>
+                        </div>
+                        <div class="flex gap-3 mt-6">
+                            ${retryCallback ? `
+                                <button id="retry-error" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex-1 transition-colors">
+                                    <span>Retry</span>
+                                </button>
+                            ` : ''}
+                            <button id="close-error" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded ${retryCallback ? 'flex-1' : 'w-full'} transition-colors">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(errorDiv);
+                this.currentError = errorDiv;
+
+                // Event listeners
+                document.getElementById('close-error').addEventListener('click', () => this.hide());
+                if (retryCallback) {
+                    document.getElementById('retry-error').addEventListener('click', () => {
+                        this.hide();
+                        retryCallback();
+                    });
+                }
+
+                return errorDiv;
+            },
+
+            hide() {
+                if (this.currentError) {
+                    this.currentError.remove();
+                    this.currentError = null;
+                }
+                const existing = document.getElementById('error-display');
+                if (existing) existing.remove();
+            },
+
+            getErrorMessage(error, context = 'prayer times') {
+                if (!navigator.onLine) {
+                    return `No internet connection. Please check your network and try again.`;
+                }
+                if (error.message === 'Failed to fetch') {
+                    return `Network error while loading ${context}. Please check your connection.`;
+                }
+                if (error.message.includes('404') || error.message.includes('not found')) {
+                    return `Data file for ${context} is missing. Please contact support.`;
+                }
+                if (error.message.includes('Invalid data')) {
+                    return `Data format error for ${context}. The file may be corrupted.`;
+                }
+                if (error.message.includes('today')) {
+                    return `Current date not found in ${context} data. Data may be outdated.`;
+                }
+                return `Failed to load ${context}. ${error.message || 'Unknown error occurred.'}`;
+            }
+        };
+
+        const LoadingIndicator = {
+            element: null,
+
+            show(message = 'Loading...') {
+                this.hide();
+                const indicator = document.createElement('div');
+                indicator.id = 'loading-indicator';
+                indicator.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-40';
+                indicator.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-xl p-6 flex flex-col items-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                        <p class="text-gray-700 font-medium">${message}</p>
+                    </div>
+                `;
+                document.body.appendChild(indicator);
+                this.element = indicator;
+            },
+
+            hide() {
+                if (this.element) {
+                    this.element.remove();
+                    this.element = null;
+                }
+                const existing = document.getElementById('loading-indicator');
+                if (existing) existing.remove();
+            }
+        };
+
+        // ==================== END CENTRALIZED MANAGEMENT ====================
+
         let deferredPrompt = null;
         let installButtonShown = false;
 
@@ -339,23 +499,7 @@
             }
         }
 
-        // Helper: Convert date string (e.g., "March 6") to an ISO date
-        function getISOFromItem(item) {
-            try {
-                if (!item || !item.date) {
-                    console.error("Invalid item for date conversion:", item);
-                    return "";
-                }
-
-                // Use 2025 specifically for ramadan2025.json
-                const year = 2025;
-                const dateStr = `${item.date}, ${year}`;
-                return new Date(dateStr).toISOString().split('T')[0];
-            } catch (error) {
-                console.error("Error converting date:", error);
-                return "";
-            }
-        }
+        // [REMOVED] Old getISOFromItem - see updated version below that uses month/day format
 
         // Improved countdown function
         let countdownInterval = null;
@@ -717,7 +861,10 @@
         // Function to load location data from bangladesh_locations.json
         function loadLocationData() {
             return fetch('data/bangladesh_locations.json')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                    return response.json();
+                })
                 .then(data => {
                     locationOffsets = data;
                     populateLocationDropdown();
@@ -725,6 +872,8 @@
                 })
                 .catch(error => {
                     console.error("Error loading location data:", error);
+                    // Fail gracefully - locations will just not have offset adjustments
+                    debugLog('Location offsets unavailable, using default times');
                 });
         }
 
@@ -935,157 +1084,19 @@
             }
         }
 
-        // Replace the createErrorElement function with this improved version
-        function createErrorElement(message, location, retry) {
-            // Remove existing error if any
-            const existingError = document.getElementById('error-display');
-            if (existingError) {
-                existingError.remove();
-            }
+        // [REMOVED] Old createErrorElement function - replaced by ErrorHandler system above
 
-            // Create new error modal instead of a banner
-            const errorDiv = document.createElement('div');
-            errorDiv.id = 'error-display';
-            errorDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
-
-            // More descriptive error with retry option
-            errorDiv.innerHTML = `
-                <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg">
-                    <div class="flex items-center mb-4">
-                        <div class="bg-red-100 p-2 rounded-full mr-3">
-                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                </path>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900">Data Loading Error</h3>
-                    </div>
-                    <p class="text-gray-700 mb-4">${message || 'Failed to load prayer times data.'}</p>
-                    ${location ? `<p class="text-sm text-gray-500 mb-4">Location: ${location}</p>` : ''}
-                    <div class="flex justify-between">
-                        ${retry ?
-                          `<button id="retry-button" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mr-2">
-                             Try Again
-                           </button>` : ''}
-                        <button id="close-error" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded flex-grow">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(errorDiv);
-
-            // Add event listeners
-            document.getElementById('close-error').addEventListener('click', () => {
-                errorDiv.remove();
-            });
-
-            if (retry) {
-                document.getElementById('retry-button').addEventListener('click', () => {
-                    errorDiv.remove();
-                    retry(); // Execute the retry function
-                });
-            }
-
-            return errorDiv;
-        }
-
-        // Update the error handling in loadRamadanData
-        function loadRamadanData() {
-            debugLog("Fetching prayer time data...");
-            const errorDisplay = document.getElementById('error-display');
-            if (errorDisplay) errorDisplay.remove();
-
-            // Check for special locations
-            if (selectedLocation === "St. John's") {
-                return loadStJohnsData();
-            } else if (selectedLocation === "Klang") {
-                return loadKlangData();
-            }
-
-            // Original code for standard locations
-            return fetch('data/ramadan2025.json')
-                .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            throw new Error('Prayer times data file not found.');
-                        } else {
-                            throw new Error(`Server error (${response.status})`);
-                        }
-                    }
-                    return response.json();
-                })
-                .then(prayerData => {
-                    if (!prayerData || !Array.isArray(prayerData) || prayerData.length === 0) {
-                        throw new Error('Invalid data format in prayer times file.');
-                    }
-
-                    // Existing code
-                    const matchedData = findTodaysPrayerData(prayerData);
-                    if (matchedData) {
-                        const data = {
-                            items: [matchedData.today, matchedData.tomorrow]
-                        };
-                        updatePrayerTimes(data);
-                        return data;
-                    } else {
-                        throw new Error("Could not find today's prayer data");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading prayer time data:', error);
-
-                    // Check if it's a network error
-                    let message = 'Failed to load prayer times.';
-                    if (error.message === 'Failed to fetch' || !navigator.onLine) {
-                        message = 'Network error. Please check your internet connection.';
-                    } else if (error.message.includes('not found')) {
-                        message = 'Prayer times data file is missing.';
-                    } else if (error.message.includes('Invalid data')) {
-                        message = 'Prayer times data format is incorrect.';
-                    } else if (error.message.includes("today's prayer data")) {
-                        message = "Today's prayer times are not available.";
-                    }
-
-                    createErrorElement(
-                        message + ' Please try again later.',
-                        selectedLocation,
-                        () => loadRamadanData() // Retry function
-                    );
-
-                    // Try to use cached data if available
-                    try {
-                        const cachedData = localStorage.getItem('prayerTimesCache');
-                        if (cachedData) {
-                            const data = JSON.parse(cachedData);
-                            updatePrayerTimes(data);
-                            return data;
-                        }
-                    } catch (cacheError) {
-                        console.error('Error loading cached data:', cacheError);
-                    }
-
-                    return Promise.resolve();
-                });
-        }
+        // [REMOVED] Duplicate loadRamadanData function - see optimized version below
 
         // Apply similar changes to loadStJohnsData and loadKlangData functions
         function loadStJohnsData() {
             debugLog("Fetching St. John's prayer time data...");
-            const errorDisplay = document.getElementById('error-display');
-            if (errorDisplay) errorDisplay.remove();
+            ErrorHandler.hide();
+            LoadingIndicator.show('Loading prayer times for St. John\'s...');
 
             return fetch('data/canada.json')
                 .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            throw new Error("St. John's prayer times file not found.");
-                        } else {
-                            throw new Error(`Server error (${response.status})`);
-                        }
-                    }
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                     return response.json();
                 })
                 .then(prayerData => {
@@ -1093,49 +1104,40 @@
                         throw new Error("Invalid data format in St. John's prayer times file.");
                     }
 
-                    // Rest of your existing code
-                    // ...
-
-                    // Cache successful data
-                    try {
-                        localStorage.setItem('stjohnsPrayerTimesCache', JSON.stringify(data));
-                    } catch (cacheError) {
-                        console.error('Error caching data:', cacheError);
+                    const matchedData = findTodaysPrayerData(prayerData);
+                    if (matchedData) {
+                        const data = {
+                            items: [matchedData.today, matchedData.tomorrow]
+                        };
+                        updatePrayerTimes(data, true);
+                        AppCache.set(AppCache.keys.stjohns, data);
+                        LoadingIndicator.hide();
+                        return data;
+                    } else {
+                        throw new Error("Could not find today's prayer data");
                     }
-
-                    return data;
                 })
                 .catch(error => {
                     console.error("Error loading St. John's prayer time data:", error);
+                    LoadingIndicator.hide();
 
-                    // Check error type and provide specific message
-                    let message = "Failed to load St. John's prayer times.";
-                    if (error.message === 'Failed to fetch' || !navigator.onLine) {
-                        message = 'Network error. Please check your internet connection.';
-                    } else if (error.message.includes('not found')) {
-                        message = "St. John's prayer times file is missing.";
-                    } else if (error.message.includes('Invalid data')) {
-                        message = "St. John's prayer times data format is incorrect.";
+                    const cachedData = AppCache.get(AppCache.keys.stjohns);
+                    if (cachedData) {
+                        debugLog('Using cached St. John\'s data');
+                        updatePrayerTimes(cachedData, true);
+                        ErrorHandler.show(
+                            'Showing cached data. ' + ErrorHandler.getErrorMessage(error, "St. John's latest prayer times"),
+                            "St. John's",
+                            () => loadStJohnsData()
+                        );
+                        return cachedData;
                     }
 
-                    createErrorElement(
-                        message + ' Please try again later or select a different location.',
+                    ErrorHandler.show(
+                        ErrorHandler.getErrorMessage(error, "St. John's prayer times"),
                         "St. John's",
-                        () => loadStJohnsData() // Retry function
+                        () => loadStJohnsData()
                     );
-
-                    // Try to use cached data if available
-                    try {
-                        const cachedData = localStorage.getItem('stjohnsPrayerTimesCache');
-                        if (cachedData) {
-                            const data = JSON.parse(cachedData);
-                            updatePrayerTimes(data, true);
-                            return data;
-                        }
-                    } catch (cacheError) {
-                        console.error('Error loading cached data:', cacheError);
-                    }
-
                     return Promise.resolve();
                 });
         }
@@ -1143,77 +1145,62 @@
         // Similar update for loadKlangData function
         function loadKlangData() {
             debugLog("Fetching Klang prayer time data...");
-            const errorDisplay = document.getElementById('error-display');
-            if (errorDisplay) errorDisplay.remove();
+            ErrorHandler.hide();
+            LoadingIndicator.show('Loading prayer times for Klang...');
 
             return fetch('data/malaysia.json')
                 .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            throw new Error("Malaysia prayer times file not found.");
-                        } else {
-                            throw new Error(`Server error (${response.status})`);
-                        }
-                    }
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                     return response.json();
                 })
                 .then(prayerData => {
                     if (!prayerData || !Array.isArray(prayerData) || prayerData.length === 0) {
-                        throw new Error("Invalid data format in Klang prayer times file.");
+                        throw new Error("Invalid data format in Malaysia prayer times file.");
                     }
 
-                    // Rest of your existing code
-                    // ...
-
-                    // Cache successful data
-                    try {
-                        localStorage.setItem('klangPrayerTimesCache', JSON.stringify(data));
-                    } catch (cacheError) {
-                        console.error('Error caching data:', cacheError);
+                    const matchedData = findTodaysPrayerData(prayerData);
+                    if (matchedData) {
+                        const data = {
+                            items: [matchedData.today, matchedData.tomorrow]
+                        };
+                        updatePrayerTimes(data);
+                        AppCache.set(AppCache.keys.klang, data);
+                        LoadingIndicator.hide();
+                        return data;
+                    } else {
+                        throw new Error("Could not find today's prayer data");
                     }
-
-                    return data;
                 })
                 .catch(error => {
                     console.error("Error loading Klang prayer time data:", error);
+                    LoadingIndicator.hide();
 
-                    // Check error type and provide specific message
-                    let message = "Failed to load Klang prayer times.";
-                    if (error.message === 'Failed to fetch' || !navigator.onLine) {
-                        message = 'Network error. Please check your internet connection.';
-                    } else if (error.message.includes('not found')) {
-                        message = "Klang prayer times file is missing.";
-                    } else if (error.message.includes('Invalid data')) {
-                        message = "Klang prayer times data format is incorrect.";
+                    const cachedData = AppCache.get(AppCache.keys.klang);
+                    if (cachedData) {
+                        debugLog('Using cached Klang data');
+                        updatePrayerTimes(cachedData);
+                        ErrorHandler.show(
+                            'Showing cached data. ' + ErrorHandler.getErrorMessage(error, 'Klang latest prayer times'),
+                            'Klang',
+                            () => loadKlangData()
+                        );
+                        return cachedData;
                     }
 
-                    createErrorElement(
-                        message + ' Please try again later or select a different location.',
-                        "Klang",
-                        () => loadKlangData() // Retry function
+                    ErrorHandler.show(
+                        ErrorHandler.getErrorMessage(error, 'Klang prayer times'),
+                        'Klang',
+                        () => loadKlangData()
                     );
-
-                    // Try to use cached data if available
-                    try {
-                        const cachedData = localStorage.getItem('klangPrayerTimesCache');
-                        if (cachedData) {
-                            const data = JSON.parse(cachedData);
-                            updatePrayerTimes(data);
-                            return data;
-                        }
-                    } catch (cacheError) {
-                        console.error('Error loading cached data:', cacheError);
-                    }
-
                     return Promise.resolve();
                 });
         }
 
-        // Add this to the loadRamadanData function
+        // Optimized loadRamadanData function with centralized error handling
         function loadRamadanData() {
             debugLog("Fetching prayer time data...");
-            const errorDisplay = document.getElementById('error-display');
-            if (errorDisplay) errorDisplay.style.display = 'none';
+            ErrorHandler.hide();
+            LoadingIndicator.show('Loading prayer times...');
 
             // Check for special locations
             if (selectedLocation === "St. John's") {
@@ -1226,7 +1213,7 @@
             return fetch('data/ramadan_curr.json')
                 .then(response => {
                     if (!response.ok) {
-                        // ramadan_curr.json not found or error, try bangladesh.json
+                        debugLog('ramadan_curr.json not available, trying bangladesh.json');
                         return fetch('data/bangladesh.json');
                     }
                     return response;
@@ -1236,13 +1223,18 @@
                     return response.json();
                 })
                 .then(prayerData => {
-                    // Replace "Existing code..." with the actual implementation
+                    if (!prayerData || !Array.isArray(prayerData) || prayerData.length === 0) {
+                        throw new Error('Invalid data format in prayer times file.');
+                    }
+
                     const matchedData = findTodaysPrayerData(prayerData);
                     if (matchedData) {
                         const data = {
                             items: [matchedData.today, matchedData.tomorrow]
                         };
                         updatePrayerTimes(data);
+                        AppCache.set(AppCache.keys.prayerTimes, data);
+                        LoadingIndicator.hide();
                         return data;
                     } else {
                         throw new Error("Could not find today's prayer data");
@@ -1250,33 +1242,30 @@
                 })
                 .catch(error => {
                     console.error('Error loading prayer time data:', error);
-                    // Show user-friendly error
-                    const errorDisplay = document.getElementById('error-display') ||
-                        createErrorElement();
-                    errorDisplay.style.display = 'flex';
-                    errorDisplay.querySelector('p').textContent =
-                        'Failed to load prayer times. Please check your connection and try again.';
+                    LoadingIndicator.hide();
 
-                    // Important: Still return a resolved promise so the chain continues
+                    const cachedData = AppCache.get(AppCache.keys.prayerTimes);
+                    if (cachedData) {
+                        debugLog('Using cached Bangladesh prayer data');
+                        updatePrayerTimes(cachedData);
+                        ErrorHandler.show(
+                            'Showing cached data. ' + ErrorHandler.getErrorMessage(error, 'latest prayer times'),
+                            selectedLocation,
+                            () => loadRamadanData()
+                        );
+                        return cachedData;
+                    }
+
+                    ErrorHandler.show(
+                        ErrorHandler.getErrorMessage(error, 'prayer times'),
+                        selectedLocation,
+                        () => loadRamadanData()
+                    );
                     return Promise.resolve();
                 });
         }
 
-        // Corrected createErrorElement function
-        function createErrorElement() {
-            const errorDiv = document.createElement('div');
-            errorDiv.id = 'error-display';
-            errorDiv.className = 'fixed bottom-0 left-0 right-0 bg-red-500 text-white p-2 flex justify-between items-center';
-            errorDiv.innerHTML = '<p class="flex-1">Error loading data</p><button class="px-2">✕</button>';
-
-            // Add a single event listener that hides the error element when the button is clicked.
-            errorDiv.querySelector('button').addEventListener('click', () => {
-                errorDiv.style.display = 'none';
-            });
-
-            document.body.appendChild(errorDiv);
-            return errorDiv;
-        }
+        // [REMOVED] Old createErrorElement function - replaced by ErrorHandler.show()
 
         // Update getISOFromItem to work with the new format
         function getISOFromItem(item) {
@@ -1297,186 +1286,7 @@
             }
         }
 
-        // Fix the raw HTML tags showing in St. John's data
-        function loadStJohnsData() {
-            debugLog("Fetching St. John's prayer time data...");
-            const errorDisplay = document.getElementById('error-display');
-            if (errorDisplay) errorDisplay.style.display = 'none';
-
-            return fetch('data/canada.json')
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-                    return response.json();
-                })
-                .then(prayerData => {
-                    // Find today's and tomorrow's prayer data
-                    const now = getCurrentLocationTime();
-                    const currentMonth = now.toLocaleString('en-US', { month: 'long' });
-                    const currentDay = now.getDate();
-
-                    debugLog(`Looking for ${currentMonth} ${currentDay} in St. John's data`);
-
-                    // Find today's entry
-                    const todayIndex = prayerData.findIndex(item =>
-                        item.month === currentMonth && item.day === currentDay
-                    );
-
-                    if (todayIndex < 0 || todayIndex >= prayerData.length - 1) {
-                        throw new Error("Could not find today's prayer data for St. John's");
-                    }
-
-                    // Get today's and tomorrow's data
-                    const today = prayerData[todayIndex];
-                    const tomorrow = prayerData[todayIndex + 1];
-
-                    // Use only sehri field, not fajr
-                    // Format data for updatePrayerTimes function
-                    const data = {
-                        items: [
-                            // Use St. John's format but with key mapping for compatibility
-                            {
-                                date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`,
-                                month: today.month,
-                                day: today.day,
-                                sehri: today.sehri,  // Only use sehri, not fajr
-                                fajr: today.fajr,
-                                zuhr: today.zuhr,
-                                asr: today.asr,
-                                maghrib: today.maghrib,
-                                iftar: today.maghrib_and_iftar, // Rename this property
-                                isha: today.isha,
-                                sehriWithNote: today.sehri + " ±2 min"  // New property for display with note
-                            },
-                            {
-                                date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.day).padStart(2, '0')}`,
-                                month: tomorrow.month,
-                                day: tomorrow.day,
-                                sehri: tomorrow.sehri,  // Only use sehri, not fajr
-                                fajr: tomorrow.fajr,
-                                zuhr: tomorrow.zuhr,
-                                asr: tomorrow.asr,
-                                maghrib: tomorrow.maghrib,
-                                iftar: tomorrow.maghrib_and_iftar, // Rename this property
-                                isha: tomorrow.isha,
-                                sehriWithNote: tomorrow.sehri + " ±2 min"  // New property for display with note
-                            }
-                        ]
-                    };
-
-                    // Update the UI with St. John's data
-                    updatePrayerTimes(data, true);  // Added a flag for St. John's special handling
-                    return data;
-                })
-                .catch(error => {
-                    console.error('Error loading St. John\'s prayer time data:', error);
-                    // Show user-friendly error
-                    const errorDisplay = document.getElementById('error-display') || createErrorElement();
-                    errorDisplay.style.display = 'flex';
-                    errorDisplay.querySelector('p').textContent = 'Failed to load St. John\'s prayer times. Please check your connection and try again.';
-                    return Promise.resolve();
-                });
-        }
-
-        // Function to load Klang data
-        function loadKlangData() {
-            debugLog("Fetching Klang prayer time data...");
-            const errorDisplay = document.getElementById('error-display');
-            if (errorDisplay) errorDisplay.style.display = 'none';
-
-            return fetch('data/malaysia.json')
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-                    return response.json();
-                })
-                .then(prayerData => {
-                    // Find today's and tomorrow's prayer data
-                    const now = getCurrentLocationTime();
-                    const currentMonth = now.toLocaleString('en-US', { month: 'long' });
-                    const currentDay = now.getDate();
-
-                    debugLog(`Looking for ${currentMonth} ${currentDay} in Klang data`);
-
-                    // Find today's entry
-                    const todayIndex = prayerData.findIndex(item =>
-                        item.month === currentMonth && item.day === currentDay
-                    );
-
-                    if (todayIndex < 0 || todayIndex >= prayerData.length - 1) {
-                        throw new Error("Could not find today's prayer data for Klang");
-                    }
-
-                    // Get today's and tomorrow's data
-                    const today = prayerData[todayIndex];
-                    const tomorrow = prayerData[todayIndex + 1];
-
-                    // Format data for updatePrayerTimes function
-                    const data = {
-                        items: [
-                            {
-                                date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`,
-                                month: today.month,
-                                day: today.day,
-                                sehri: today.sehri, // Only use sehri, not falling back to fajr
-                                fajr: today.fajr,
-                                zuhr: today.zuhr,
-                                asr: today.asr,
-                                maghrib: today.maghrib,
-                                iftar: today.maghrib_and_iftar, // Rename this property
-                                isha: today.isha
-                            },
-                            {
-                                date_for: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.day).padStart(2, '0')}`,
-                                month: tomorrow.month,
-                                day: tomorrow.day,
-                                sehri: tomorrow.sehri, // Only use sehri, not falling back to fajr
-                                fajr: tomorrow.fajr,
-                                zuhr: tomorrow.zuhr,
-                                asr: tomorrow.asr,
-                                maghrib: tomorrow.maghrib,
-                                iftar: tomorrow.maghrib_and_iftar, // Rename this property
-                                isha: tomorrow.isha
-                            }
-                        ]
-                    };
-
-                    // Update the UI with Klang data
-                    updatePrayerTimes(data);
-                    return data;
-                })
-                .catch(error => {
-                    console.error("Error loading Klang prayer time data:", error);
-
-                    // Check error type and provide specific message
-                    let message = "Failed to load Klang prayer times.";
-                    if (error.message === 'Failed to fetch' || !navigator.onLine) {
-                        message = 'Network error. Please check your internet connection.';
-                    } else if (error.message.includes('not found')) {
-                        message = "Klang prayer times file is missing.";
-                    } else if (error.message.includes('Invalid data')) {
-                        message = "Klang prayer times data format is incorrect.";
-                    }
-
-                    createErrorElement(
-                        message + ' Please try again later or select a different location.',
-                        "Klang",
-                        () => loadKlangData() // Retry function
-                    );
-
-                    // Try to use cached data if available
-                    try {
-                        const cachedData = localStorage.getItem('klangPrayerTimesCache');
-                        if (cachedData) {
-                            const data = JSON.parse(cachedData);
-                            updatePrayerTimes(data);
-                            return data;
-                        }
-                    } catch (cacheError) {
-                        console.error('Error loading cached data:', cacheError);
-                    }
-
-                    return Promise.resolve();
-                });
-        }
+        // [REMOVED] Duplicate loadStJohnsData and loadKlangData - see optimized versions above
 
         // Update current date and time display
         function updateCurrentDateTime() {
@@ -1564,10 +1374,12 @@
                 }
             }).catch(err => {
                 clearTimeout(loadingTimer);
+                LoadingIndicator.hide();
                 console.error("Error initializing app:", err);
-                const errorDisplay = document.getElementById('error-display') || createErrorElement();
-                errorDisplay.style.display = 'flex';
-                errorDisplay.querySelector('p').textContent = 'Failed to load prayer times. Please check your connection and try again.';
+                ErrorHandler.show(
+                    'Failed to load prayer times. Please check your connection and try again.',
+                    () => location.reload()
+                );
             });
 
             // Safety timeout shorter for better UX
@@ -1759,44 +1571,7 @@
             }
         }
 
-        // Update the current date and time display function to use the new location-aware time function
-        function updateCurrentDateTime() {
-            try {
-                const now = getCurrentLocationTime(); // Use location-specific time
-
-                const dateOptions = {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                };
-
-                const timeOptions = {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: true
-                };
-
-                document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', dateOptions);
-                document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', timeOptions);
-
-                // Add location name to the time display
-                const locationDisplay = document.getElementById('location-time-display');
-                if (!locationDisplay) {
-                    const timeElement = document.getElementById('current-time');
-                    const locationSpan = document.createElement('span');
-                    locationSpan.id = 'location-time-display';
-                    locationSpan.className = 'text-sm text-gray-600 block';
-                    locationSpan.textContent = `${selectedLocation} Time`;
-                    timeElement.parentNode.insertBefore(locationSpan, timeElement.nextSibling);
-                } else {
-                    locationDisplay.textContent = `${selectedLocation} Time`;
-                }
-            } catch (error) {
-                console.error("Error updating date/time:", error);
-            }
-        }
+        // [REMOVED] Duplicate updateCurrentDateTime - see above for the active version
     </script>
     <script defer src="/_vercel/speed-insights/script.js"></script>
     <script defer src="/_vercel/insights/script.js"></script>
