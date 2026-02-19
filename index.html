@@ -50,6 +50,9 @@
             overflow-x: hidden;
             position: relative;
             background-color: #000000;
+            /* Prevent address bar resize from causing jank */
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Fixed background that ABSOLUTELY won't move or respond to anything */
@@ -57,27 +60,41 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            /* Lock to initial viewport - won't change with address bar */
+            min-height: -webkit-fill-available;
+            min-height: 100vh;
             z-index: -2;
             background-image: url('https://i.postimg.cc/256BHQts/download-3-2.jpg');
             background-size: cover;
-            background-position: center;
+            background-position: center center;
             background-repeat: no-repeat;
-            pointer-events: none; /* Prevents any interaction */
+            background-attachment: scroll;
+            pointer-events: none;
+            /* Prevent any transform or reflow */
+            transform: translateZ(0);
+            will-change: initial;
+            backface-visibility: hidden;
         }
 
         /* Main content container that properly fills the viewport */
         .content-container {
-            min-height: 101vh; /* Slightly taller than viewport to prevent bounce */
+            min-height: -webkit-fill-available;
+            min-height: 100vh;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding-top: 16px;
-            padding-bottom: 32px; /* Extra padding at bottom to prevent seeing background */
+            padding-bottom: 32px;
             position: relative;
             z-index: 1;
+            /* Smooth scrolling */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Dimming overlay */
@@ -85,10 +102,17 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.2); /* Slight dim */
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            min-height: -webkit-fill-available;
+            min-height: 100vh;
+            background-color: rgba(0, 0, 0, 0.2);
             z-index: -1;
+            /* Same anti-movement techniques */
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
         /* Default background color that extends beyond content */
@@ -101,6 +125,8 @@
             /* Remove padding-top as it's now in content-container */
             position: relative;
             z-index: 1;
+            /* Prevent rubber band scrolling effect on mobile */
+            overscroll-behavior-y: none;
         }
 
         /* Rest of your styles remain the same */
@@ -152,6 +178,16 @@
             will-change: contents;
         }
 
+        /* Better tap targets for mobile */
+        button, select, a {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+
         /* Loading skeleton styles */
         .skeleton {
             background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
@@ -163,6 +199,32 @@
         @keyframes shimmer {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
+        }
+
+        /* Mobile-specific optimizations */
+        @media screen and (max-width: 768px) {
+            /* Prevent zoom on input focus */
+            input, select, textarea {
+                font-size: 16px;
+            }
+
+            /* Ensure content doesn't jump during scroll */
+            .content-container {
+                -webkit-overflow-scrolling: touch;
+                overflow-anchor: none;
+            }
+
+            /* Optimize animations on mobile */
+            .transition-smooth {
+                transition-duration: 0.2s;
+            }
+        }
+
+        /* Prevent pull-to-refresh on mobile browsers */
+        @media (pointer: coarse) {
+            body {
+                overscroll-behavior-y: contain;
+            }
         }
     </style>
     <!-- Vercel Speed Insights & Analytics moved to end of body -->
@@ -183,7 +245,7 @@
 
             <!-- Improved location selector placement -->
             <div class="mt-2 flex justify-center">
-                <select id="location-selector" 
+                <select id="location-selector"
                         class="bg-white border border-gray-300 rounded py-2 px-3 text-sm"
                         aria-label="Select location for prayer times">
                     <option value="Dhaka" selected>Dhaka</option>
@@ -267,6 +329,46 @@
 
     <!-- JavaScript -->
     <script>
+        // ==================== MOBILE VIEWPORT FIX ====================
+        // Fix for Chrome mobile address bar causing background shift
+        // Lock the viewport height on initial load
+        (function() {
+            const setViewportHeight = () => {
+                // Get the actual viewport height when page loads
+                const vh = window.innerHeight * 0.01;
+                // Set as CSS custom property
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+                // Lock fixed elements to initial viewport
+                const fixedBg = document.querySelector('.fixed-bg');
+                const dimmer = document.querySelector('.bg-dimmer');
+                if (fixedBg) {
+                    fixedBg.style.height = `${window.innerHeight}px`;
+                }
+                if (dimmer) {
+                    dimmer.style.height = `${window.innerHeight}px`;
+                }
+            };
+
+            // Set on load
+            setViewportHeight();
+
+            // Only recalculate on actual resize (orientation change), not address bar hide
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    // Only update if width changed (orientation) not just height (address bar)
+                    const currentWidth = window.innerWidth;
+                    if (window.lastWidth !== currentWidth) {
+                        setViewportHeight();
+                        window.lastWidth = currentWidth;
+                    }
+                }, 250);
+            });
+            window.lastWidth = window.innerWidth;
+        })();
+
         // Add this near the top of your script section
         const DEBUG = false; // Set to true only when debugging
 
@@ -284,31 +386,31 @@
             currentDate: null,
             currentTime: null,
             locationTimeDisplay: null,
-            
+
             // Main event elements
             mainEventLabel: null,
             mainEventDate: null,
             mainEventTime: null,
-            
+
             // Countdown elements
             countdownHours: null,
             countdownMinutes: null,
             countdownSeconds: null,
-            
+
             // Secondary event elements
             secondaryEventLabel: null,
             secondaryEventDate: null,
             secondaryEventTime: null,
-            
+
             // Prayer elements
             nextPrayerName: null,
             nextPrayerTime: null,
             followingPrayerName: null,
             followingPrayerTime: null,
-            
+
             // Other elements
             locationSelector: null,
-            
+
             // Initialize all cached elements
             init() {
                 this.currentDate = document.getElementById('current-date');
@@ -463,27 +565,74 @@
 
         const LoadingIndicator = {
             element: null,
+            showTimeout: null,
+            shownAt: null,
+            minDisplayTime: 400, // Minimum time to show once displayed (ms)
+            showDelay: 200, // Delay before showing to avoid flicker on fast loads (ms)
 
-            show(message = 'Loading...') {
-                this.hide();
-                const indicator = document.createElement('div');
-                indicator.id = 'loading-indicator';
-                indicator.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-40';
-                indicator.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-xl p-6 flex flex-col items-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                        <p class="text-gray-700 font-medium">${message}</p>
-                    </div>
-                `;
-                document.body.appendChild(indicator);
-                this.element = indicator;
+            show(message = 'Loading...', immediate = false) {
+                // Clear any pending show timeout
+                if (this.showTimeout) {
+                    clearTimeout(this.showTimeout);
+                }
+
+                const showIndicator = () => {
+                    this._forceHide(); // Clean up any existing indicator first
+                    const indicator = document.createElement('div');
+                    indicator.id = 'loading-indicator';
+                    indicator.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-40';
+                    indicator.innerHTML = `
+                        <div class="bg-white rounded-lg shadow-xl p-6 flex flex-col items-center">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                            <p class="text-gray-700 font-medium">${message}</p>
+                        </div>
+                    `;
+                    document.body.appendChild(indicator);
+                    this.element = indicator;
+                    this.shownAt = Date.now(); // Track when we showed it
+                    this.showTimeout = null;
+                };
+
+                // Immediately show on initial load, delay for subsequent loads
+                if (immediate) {
+                    showIndicator();
+                } else {
+                    this.showTimeout = setTimeout(showIndicator, this.showDelay);
+                }
             },
 
             hide() {
+                // Clear pending show timeout if hide is called before delay completes
+                if (this.showTimeout) {
+                    clearTimeout(this.showTimeout);
+                    this.showTimeout = null;
+                    return;
+                }
+
+                // If indicator is showing, ensure minimum display time
+                if (this.element && this.shownAt) {
+                    const displayTime = Date.now() - this.shownAt;
+                    const remainingTime = this.minDisplayTime - displayTime;
+
+                    if (remainingTime > 0) {
+                        // Keep showing for the remaining time
+                        setTimeout(() => {
+                            this._forceHide();
+                        }, remainingTime);
+                    } else {
+                        this._forceHide();
+                    }
+                } else {
+                    this._forceHide();
+                }
+            },
+
+            _forceHide() {
                 if (this.element) {
                     this.element.remove();
                     this.element = null;
                 }
+                this.shownAt = null;
                 const existing = document.getElementById('loading-indicator');
                 if (existing) existing.remove();
             }
@@ -782,7 +931,7 @@
                 DOMCache.mainEventDate.textContent = formatDate(upcomingEvent.dateStr);
 
                 // Using innerHTML for main event time to properly render HTML content
-                if (upcomingEvent.label === 'SEHRI') {
+                if (upcomingEvent.label === 'SEHRI' && upcomingEvent.timeStr.includes('±2 min')) {
                     DOMCache.mainEventTime.innerHTML =
                         `${formatTime(upcomingEvent.timeStr).replace(" ±2 min", "")}
                          <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
@@ -794,7 +943,7 @@
                 DOMCache.secondaryEventLabel.textContent = secondaryEvent.label;
                 DOMCache.secondaryEventDate.textContent = formatDate(secondaryEvent.dateStr);
 
-                if (secondaryEvent.label === 'SEHRI') {
+                if (secondaryEvent.label === 'SEHRI' && secondaryEvent.timeStr.includes('±2 min')) {
                     DOMCache.secondaryEventTime.innerHTML =
                         `${formatTime(secondaryEvent.timeStr).replace(" ±2 min", "")}
                          <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
@@ -890,7 +1039,8 @@
                 if (futurePrayers.length > 0) {
                     DOMCache.nextPrayerName.textContent =
                         `${futurePrayers[0].name}${futurePrayers[0].day === "Tomorrow" ? " (Tomorrow)" : ""}`;
-                    if (futurePrayers.length > 0 && futurePrayers[0].name === "FAJR") {
+                    // Check if time has ±2 min note before displaying it
+                    if (futurePrayers.length > 0 && futurePrayers[0].name === "FAJR" && futurePrayers[0].time.includes('±2 min')) {
                         DOMCache.nextPrayerTime.innerHTML =
                             `${formatTime(futurePrayers[0].time)}
                              <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
@@ -905,7 +1055,8 @@
                 if (futurePrayers.length > 1) {
                     DOMCache.followingPrayerName.textContent =
                         `${futurePrayers[1].name}${futurePrayers[1].day === "Tomorrow" ? " (Tomorrow)" : ""}`;
-                    if (futurePrayers.length > 1 && futurePrayers[1].name === "FAJR") {
+                    // Check if time has ±2 min note before displaying it
+                    if (futurePrayers.length > 1 && futurePrayers[1].name === "FAJR" && futurePrayers[1].time.includes('±2 min')) {
                         DOMCache.followingPrayerTime.innerHTML =
                             `${formatTime(futurePrayers[1].time)}
                              <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
@@ -1446,21 +1597,40 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize DOM element cache first for better performance
             DOMCache.init();
-            
-            // Rest of your initialization...
-            let loadingTimer = setTimeout(() => {
-                const loadingIndicator = document.createElement('div');
-                loadingIndicator.id = 'loading-indicator';
-                loadingIndicator.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
-                loadingIndicator.innerHTML = '<div class="bg-white p-4 rounded-lg">Loading prayer times...</div>';
-                document.body.appendChild(loadingIndicator);
-            }, 500);  // Only show loading after 500ms delay
+
+            // ==================== MOBILE UX ENHANCEMENTS ====================
+            // Prevent pull-to-refresh on mobile
+            let touchStartY = 0;
+            document.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+            }, { passive: false });
+
+            document.addEventListener('touchmove', (e) => {
+                const touchY = e.touches[0].clientY;
+                const touchDelta = touchY - touchStartY;
+
+                // If at top of page and pulling down, prevent default
+                if (window.scrollY === 0 && touchDelta > 0) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            // Prevent double-tap zoom on buttons
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', (e) => {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) {
+                    e.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, { passive: false });
+
+            // Show loading indicator immediately on initial page load
+            LoadingIndicator.show('Loading prayer times...', true);
 
             // Initialize the app
             init().then(() => {
-                clearTimeout(loadingTimer);  // Clear the timer if data loads quickly
-                const indicator = document.getElementById('loading-indicator');
-                if (indicator) document.body.removeChild(indicator);
+                LoadingIndicator.hide();
 
                 // Check if St. John's is already selected (from localStorage)
                 if (selectedLocation === "St. John's") {
@@ -1469,7 +1639,6 @@
                     loadKlangData();
                 }
             }).catch(err => {
-                clearTimeout(loadingTimer);
                 LoadingIndicator.hide();
                 console.error("Error initializing app:", err);
                 ErrorHandler.show(
@@ -1477,15 +1646,6 @@
                     () => location.reload()
                 );
             });
-
-            // Safety timeout shorter for better UX
-            setTimeout(() => {
-                clearTimeout(loadingTimer);
-                const indicator = document.getElementById('loading-indicator');
-                if (indicator && indicator.parentNode) {
-                    indicator.parentNode.removeChild(indicator);
-                }
-            }, 5000); // Shorter timeout (5s instead of 10s)
         });
 
         // Add this new function to set up all button handlers
