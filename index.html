@@ -48,10 +48,11 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            overflow-y: auto;
             position: relative;
             background-color: #000000;
             /* Prevent address bar resize from causing jank */
-            overscroll-behavior: none;
+            overscroll-behavior-x: none;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -82,7 +83,6 @@
 
         /* Main content container that properly fills the viewport */
         .content-container {
-            min-height: -webkit-fill-available;
             min-height: 100vh;
             width: 100%;
             display: flex;
@@ -92,9 +92,6 @@
             padding-bottom: 32px;
             position: relative;
             z-index: 1;
-            /* Smooth scrolling */
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
         }
 
         /* Dimming overlay */
@@ -125,8 +122,6 @@
             /* Remove padding-top as it's now in content-container */
             position: relative;
             z-index: 1;
-            /* Prevent rubber band scrolling effect on mobile */
-            overscroll-behavior-y: none;
         }
 
         /* Rest of your styles remain the same */
