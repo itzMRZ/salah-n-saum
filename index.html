@@ -31,14 +31,14 @@
     <meta property="og:url" content="https://salah-n-saum.itzmrz.xyz/">
     <meta property="og:title" content="Salah-N-Saum - Ramadan Prayer Times">
     <meta property="og:description" content="Track Iftar and Sahri times for Ramadan 2025">
-    <meta property="og:image" content="https://salah-n-saum.itzmrz.xyz/image.jpg">
+    <meta property="og:image" content="https://salah-n-saum.itzmrz.xyz/assets/image.jpg">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://salah-n-saum.itzmrz.xyz/">
     <meta property="twitter:title" content="Salah-N-Saum - Ramadan Prayer Times">
     <meta property="twitter:description" content="Track Iftar and Sahri times for Ramadan 2025">
-    <meta property="twitter:image" content="https://salah-n-saum.itzmrz.xyz/image.jpg">
+    <meta property="twitter:image" content="https://salah-n-saum.itzmrz.xyz/assets/image.jpg">
 
     <style>
         /* Keep the rest of your styles */
@@ -714,9 +714,9 @@
             return null;
         }
 
-        // Function to load location data from add_minus.json
+        // Function to load location data from bangladesh_locations.json
         function loadLocationData() {
-            return fetch('add_minus.json')
+            return fetch('data/bangladesh_locations.json')
                 .then(response => response.json())
                 .then(data => {
                     locationOffsets = data;
@@ -1006,7 +1006,7 @@
             }
 
             // Original code for standard locations
-            return fetch('ramadan2025.json')
+            return fetch('data/ramadan2025.json')
                 .then(response => {
                     if (!response.ok) {
                         if (response.status === 404) {
@@ -1077,7 +1077,7 @@
             const errorDisplay = document.getElementById('error-display');
             if (errorDisplay) errorDisplay.remove();
 
-            return fetch('St_Johns.json')
+            return fetch('data/canada.json')
                 .then(response => {
                     if (!response.ok) {
                         if (response.status === 404) {
@@ -1146,11 +1146,11 @@
             const errorDisplay = document.getElementById('error-display');
             if (errorDisplay) errorDisplay.remove();
 
-            return fetch('klang.json')
+            return fetch('data/malaysia.json')
                 .then(response => {
                     if (!response.ok) {
                         if (response.status === 404) {
-                            throw new Error("Klang prayer times file not found.");
+                            throw new Error("Malaysia prayer times file not found.");
                         } else {
                             throw new Error(`Server error (${response.status})`);
                         }
@@ -1222,8 +1222,15 @@
                 return loadKlangData();
             }
 
-            // Original code for standard locations
-            return fetch('ramadan2025.json')
+            // For Bangladesh: Try ramadan_curr.json first (priority), then fall back to bangladesh.json
+            return fetch('data/ramadan_curr.json')
+                .then(response => {
+                    if (!response.ok) {
+                        // ramadan_curr.json not found or error, try bangladesh.json
+                        return fetch('data/bangladesh.json');
+                    }
+                    return response;
+                })
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                     return response.json();
@@ -1296,7 +1303,7 @@
             const errorDisplay = document.getElementById('error-display');
             if (errorDisplay) errorDisplay.style.display = 'none';
 
-            return fetch('St_Johns.json')
+            return fetch('data/canada.json')
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                     return response.json();
@@ -1376,7 +1383,7 @@
             const errorDisplay = document.getElementById('error-display');
             if (errorDisplay) errorDisplay.style.display = 'none';
 
-            return fetch('klang.json')
+            return fetch('data/malaysia.json')
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                     return response.json();

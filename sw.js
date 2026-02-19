@@ -1,16 +1,19 @@
-const CACHE_NAME = 'prayer-times-v1';
+const CACHE_NAME = 'prayer-times-v3';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/ramadan2025.json',
-  '/january.json',
+  '/data/bangladesh.json',
+  '/data/bangladesh_locations.json',
+  '/data/malaysia.json',
+  '/data/canada.json',
+  '/data/ramadan_curr.json',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-  '/bmimg.jpg', // Make sure this matches the actual file name
+  '/assets/bgimg.jpg',
+  '/assets/font.otf',
   'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css',
-  '/font.otf'
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css'
 ];
 
 // Install service worker and cache assets
