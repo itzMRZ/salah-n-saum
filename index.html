@@ -560,7 +560,10 @@
         }
 
         // Main function to update prayer times with enhanced error handling
-        function updatePrayerTimes(data, isStJohns = false) {
+        function updatePrayerTimes(data, options = {}) {
+            const isStJohns = options.isStJohns || false;
+            const showNote = options.showNote !== undefined ? options.showNote : false;
+            
             debugLog("Updating prayer times with data for location:", selectedLocation);
 
             if (!data || !data.items || data.items.length < 2) {
@@ -605,7 +608,7 @@
                     events.push({
                         label: 'SEHRI',
                         dateStr: todayDateStr,
-                        timeStr: isStJohns ? adjustedSehri + " ±2 min" : adjustedSehri,
+                        timeStr: (isStJohns || showNote) ? adjustedSehri + " ±2 min" : adjustedSehri,
                         originalTime: today.sehri,
                         eventDateTime: parseTime(todayDateStr, adjustedSehri),
                         displayTime: sehriTimeDisplay
@@ -631,7 +634,7 @@
                     events.push({
                         label: 'SEHRI',
                         dateStr: tomorrowDateStr,
-                        timeStr: isStJohns ? adjustedSehri + " ±2 min" : adjustedSehri,
+                        timeStr: (isStJohns || showNote) ? adjustedSehri + " ±2 min" : adjustedSehri,
                         originalTime: tomorrow.sehri,
                         eventDateTime: parseTime(tomorrowDateStr, adjustedSehri),
                         displayTime: sehriTimeDisplay
@@ -1109,7 +1112,7 @@
                         const data = {
                             items: [matchedData.today, matchedData.tomorrow]
                         };
-                        updatePrayerTimes(data, true);
+                        updatePrayerTimes(data, { isStJohns: true });
                         AppCache.set(AppCache.keys.stjohns, data);
                         LoadingIndicator.hide();
                         return data;
@@ -1124,7 +1127,7 @@
                     const cachedData = AppCache.get(AppCache.keys.stjohns);
                     if (cachedData) {
                         debugLog('Using cached St. John\'s data');
-                        updatePrayerTimes(cachedData, true);
+                        updatePrayerTimes(cachedData, { isStJohns: true });
                         ErrorHandler.show(
                             'Showing cached data. ' + ErrorHandler.getErrorMessage(error, "St. John's latest prayer times"),
                             "St. John's",
@@ -1210,12 +1213,15 @@
             }
 
             // For Bangladesh: Try ramadan_curr.json first (priority), then fall back to bangladesh.json
+            let isFromRamadanCurr = false;
             return fetch('data/ramadan_curr.json')
                 .then(response => {
                     if (!response.ok) {
                         debugLog('ramadan_curr.json not available, trying bangladesh.json');
+                        isFromRamadanCurr = false;
                         return fetch('data/bangladesh.json');
                     }
+                    isFromRamadanCurr = true;
                     return response;
                 })
                 .then(response => {
@@ -1232,7 +1238,8 @@
                         const data = {
                             items: [matchedData.today, matchedData.tomorrow]
                         };
-                        updatePrayerTimes(data);
+                        // Only show ±2 min note when NOT using ramadan_curr.json
+                        updatePrayerTimes(data, { showNote: !isFromRamadanCurr });
                         AppCache.set(AppCache.keys.prayerTimes, data);
                         LoadingIndicator.hide();
                         return data;
@@ -1247,7 +1254,7 @@
                     const cachedData = AppCache.get(AppCache.keys.prayerTimes);
                     if (cachedData) {
                         debugLog('Using cached Bangladesh prayer data');
-                        updatePrayerTimes(cachedData);
+                        updatePrayerTimes(cachedData, { showNote: true });
                         ErrorHandler.show(
                             'Showing cached data. ' + ErrorHandler.getErrorMessage(error, 'latest prayer times'),
                             selectedLocation,
