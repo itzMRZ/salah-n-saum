@@ -5,7 +5,7 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=de, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Move theme-color tags to the top of head for priority -->
     <meta name="theme-color" content="#000000">
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#000000">
@@ -123,6 +123,7 @@
 
         /* Add these styles to your existing style block */
         .custom-dropdown {
+            -webkit-user-select: none;
             user-select: none;
             position: relative;
         }
@@ -130,6 +131,38 @@
         .custom-dropdown .selected-display:focus {
             outline: 2px solid #3b82f6;
             outline-offset: 2px;
+        }
+
+        /* Smooth transitions for UI updates */
+        .transition-smooth {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .fade-update {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0.5; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Optimize countdown repaints */
+        #countdown-hours, #countdown-minutes, #countdown-seconds {
+            will-change: contents;
+        }
+
+        /* Loading skeleton styles */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
     </style>
     <!-- Vercel Speed Insights & Analytics moved to end of body -->
@@ -150,7 +183,9 @@
 
             <!-- Improved location selector placement -->
             <div class="mt-2 flex justify-center">
-                <select id="location-selector" class="bg-white border border-gray-300 rounded py-2 px-3 text-sm">
+                <select id="location-selector" 
+                        class="bg-white border border-gray-300 rounded py-2 px-3 text-sm"
+                        aria-label="Select location for prayer times">
                     <option value="Dhaka" selected>Dhaka</option>
                     <!-- Other locations will be dynamically added here -->
                 </select>
@@ -158,7 +193,7 @@
         </div>
 
         <!-- Merged Main Event and Countdown Section - Now properly centered -->
-        <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center mb-4 w-11/12">
+        <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center mb-4 w-11/12 transition-smooth">
             <!-- Event Details with adjusted font sizes -->
             <h1 class="text-4xl font-bold text-enhanced" id="main-event-label">Loading Event...</h1>
             <p class="text-sm text-enhanced" id="main-event-date">Loading date...</p>
@@ -186,7 +221,7 @@
         </div>
 
         <!-- Secondary Event Section -->
-        <div id="secondary-event" class="bg-white bg-opacity-75 rounded-lg p-4 text-center mb-4 w-11/12">
+        <div id="secondary-event" class="bg-white bg-opacity-75 rounded-lg p-4 text-center mb-4 w-11/12 transition-smooth">
             <h2 class="text-3xl font-bold text-enhanced" id="secondary-event-label">Other Event</h2>
             <p class="text-sm text-enhanced" id="secondary-event-date">Loading date...</p>
             <p class="text-4xl font-bold text-enhanced" id="secondary-event-time">Loading time...</p>
@@ -194,11 +229,11 @@
 
         <!-- Other Prayers Section -->
         <div class="flex justify-center space-x-4 mb-4 w-11/12">
-            <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center w-1/2">
+            <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center w-1/2 transition-smooth">
                 <p class="text-xl font-bold text-enhanced" id="next-prayer-name">Next Prayer</p>
                 <p class="text-lg text-enhanced" id="next-prayer-time">Loading...</p>
             </div>
-            <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center w-1/2">
+            <div class="bg-white bg-opacity-75 rounded-lg p-4 text-center w-1/2 transition-smooth">
                 <p class="text-xl font-bold text-enhanced" id="following-prayer-name">Following Prayer</p>
                 <p class="text-lg text-enhanced" id="following-prayer-time">Loading...</p>
             </div>
@@ -239,6 +274,60 @@
         function debugLog(...args) {
             if (DEBUG) {
                 console.log(...args);
+            }
+        }
+
+        // ==================== DOM ELEMENT CACHE ====================
+        // Cache DOM elements for better performance
+        const DOMCache = {
+            // Current date/time elements
+            currentDate: null,
+            currentTime: null,
+            locationTimeDisplay: null,
+            
+            // Main event elements
+            mainEventLabel: null,
+            mainEventDate: null,
+            mainEventTime: null,
+            
+            // Countdown elements
+            countdownHours: null,
+            countdownMinutes: null,
+            countdownSeconds: null,
+            
+            // Secondary event elements
+            secondaryEventLabel: null,
+            secondaryEventDate: null,
+            secondaryEventTime: null,
+            
+            // Prayer elements
+            nextPrayerName: null,
+            nextPrayerTime: null,
+            followingPrayerName: null,
+            followingPrayerTime: null,
+            
+            // Other elements
+            locationSelector: null,
+            
+            // Initialize all cached elements
+            init() {
+                this.currentDate = document.getElementById('current-date');
+                this.currentTime = document.getElementById('current-time');
+                this.mainEventLabel = document.getElementById('main-event-label');
+                this.mainEventDate = document.getElementById('main-event-date');
+                this.mainEventTime = document.getElementById('main-event-time');
+                this.countdownHours = document.getElementById('countdown-hours');
+                this.countdownMinutes = document.getElementById('countdown-minutes');
+                this.countdownSeconds = document.getElementById('countdown-seconds');
+                this.secondaryEventLabel = document.getElementById('secondary-event-label');
+                this.secondaryEventDate = document.getElementById('secondary-event-date');
+                this.secondaryEventTime = document.getElementById('secondary-event-time');
+                this.nextPrayerName = document.getElementById('next-prayer-name');
+                this.nextPrayerTime = document.getElementById('next-prayer-time');
+                this.followingPrayerName = document.getElementById('following-prayer-name');
+                this.followingPrayerTime = document.getElementById('following-prayer-time');
+                this.locationSelector = document.getElementById('location-selector');
+                debugLog('DOM cache initialized');
             }
         }
 
@@ -529,9 +618,9 @@
                     });
 
                     if (diff <= 0) {
-                        document.getElementById('countdown-hours').textContent = '00';
-                        document.getElementById('countdown-minutes').textContent = '00';
-                        document.getElementById('countdown-seconds').textContent = '00';
+                        DOMCache.countdownHours.textContent = '00';
+                        DOMCache.countdownMinutes.textContent = '00';
+                        DOMCache.countdownSeconds.textContent = '00';
                         clearInterval(countdownInterval);
 
                         // Reload data when countdown reaches zero
@@ -546,9 +635,9 @@
                     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
                     // Update the DOM
-                    document.getElementById('countdown-hours').textContent = String(hours).padStart(2, '0');
-                    document.getElementById('countdown-minutes').textContent = String(minutes).padStart(2, '0');
-                    document.getElementById('countdown-seconds').textContent = String(seconds).padStart(2, '0');
+                    DOMCache.countdownHours.textContent = String(hours).padStart(2, '0');
+                    DOMCache.countdownMinutes.textContent = String(minutes).padStart(2, '0');
+                    DOMCache.countdownSeconds.textContent = String(seconds).padStart(2, '0');
                 } catch (error) {
                     console.error("Error in countdown:", error);
                 }
@@ -563,7 +652,7 @@
         function updatePrayerTimes(data, options = {}) {
             const isStJohns = options.isStJohns || false;
             const showNote = options.showNote !== undefined ? options.showNote : false;
-            
+
             debugLog("Updating prayer times with data for location:", selectedLocation);
 
             if (!data || !data.items || data.items.length < 2) {
@@ -688,31 +777,29 @@
                     secondaryEvent
                 });
 
-                // Update main event section
-                document.getElementById('main-event-label').textContent = upcomingEvent.label;
-                document.getElementById('main-event-date').textContent = formatDate(upcomingEvent.dateStr);
+                // Update main event section with smooth transition
+                DOMCache.mainEventLabel.textContent = upcomingEvent.label;
+                DOMCache.mainEventDate.textContent = formatDate(upcomingEvent.dateStr);
 
                 // Using innerHTML for main event time to properly render HTML content
-                const mainEventTimeElement = document.getElementById('main-event-time');
                 if (upcomingEvent.label === 'SEHRI') {
-                    mainEventTimeElement.innerHTML =
+                    DOMCache.mainEventTime.innerHTML =
                         `${formatTime(upcomingEvent.timeStr).replace(" ±2 min", "")}
                          <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
                 } else {
-                    mainEventTimeElement.textContent = formatTime(upcomingEvent.timeStr);
+                    DOMCache.mainEventTime.textContent = formatTime(upcomingEvent.timeStr);
                 }
 
                 // Update secondary event section
-                document.getElementById('secondary-event-label').textContent = secondaryEvent.label;
-                document.getElementById('secondary-event-date').textContent = formatDate(secondaryEvent.dateStr);
+                DOMCache.secondaryEventLabel.textContent = secondaryEvent.label;
+                DOMCache.secondaryEventDate.textContent = formatDate(secondaryEvent.dateStr);
 
-                const secondaryEventTimeElement = document.getElementById('secondary-event-time');
                 if (secondaryEvent.label === 'SEHRI') {
-                    secondaryEventTimeElement.innerHTML =
+                    DOMCache.secondaryEventTime.innerHTML =
                         `${formatTime(secondaryEvent.timeStr).replace(" ±2 min", "")}
                          <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
                 } else {
-                    secondaryEventTimeElement.textContent = formatTime(secondaryEvent.timeStr);
+                    DOMCache.secondaryEventTime.textContent = formatTime(secondaryEvent.timeStr);
                 }
 
                 // Start countdown toward the upcoming event
@@ -801,34 +888,34 @@
 
                 // Update the prayer boxes
                 if (futurePrayers.length > 0) {
-                    document.getElementById('next-prayer-name').textContent =
+                    DOMCache.nextPrayerName.textContent =
                         `${futurePrayers[0].name}${futurePrayers[0].day === "Tomorrow" ? " (Tomorrow)" : ""}`;
                     if (futurePrayers.length > 0 && futurePrayers[0].name === "FAJR") {
-                        document.getElementById('next-prayer-time').innerHTML =
+                        DOMCache.nextPrayerTime.innerHTML =
                             `${formatTime(futurePrayers[0].time)}
                              <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
                     } else {
-                        document.getElementById('next-prayer-time').textContent = formatTime(futurePrayers[0].time);
+                        DOMCache.nextPrayerTime.textContent = formatTime(futurePrayers[0].time);
                     }
                 } else {
-                    document.getElementById('next-prayer-name').textContent = "No more prayers";
-                    document.getElementById('next-prayer-time').textContent = "Today";
+                    DOMCache.nextPrayerName.textContent = "No more prayers";
+                    DOMCache.nextPrayerTime.textContent = "Today";
                 }
 
                 if (futurePrayers.length > 1) {
-                    document.getElementById('following-prayer-name').textContent =
+                    DOMCache.followingPrayerName.textContent =
                         `${futurePrayers[1].name}${futurePrayers[1].day === "Tomorrow" ? " (Tomorrow)" : ""}`;
                     if (futurePrayers.length > 1 && futurePrayers[1].name === "FAJR") {
-                        document.getElementById('following-prayer-time').innerHTML =
+                        DOMCache.followingPrayerTime.innerHTML =
                             `${formatTime(futurePrayers[1].time)}
                              <span class="text-purple-600 text-xs align-top" style="vertical-align: super;">±2 min</span>`;
                     } else if (futurePrayers.length > 1) {
-                        document.getElementById('following-prayer-time').textContent = formatTime(futurePrayers[1].time);
+                        DOMCache.followingPrayerTime.textContent = formatTime(futurePrayers[1].time);
                     }
                 } else {
-                    document.getElementById('following-prayer-name').textContent =
+                    DOMCache.followingPrayerName.textContent =
                         futurePrayers.length === 1 ? "Last prayer" : "No prayers";
-                    document.getElementById('following-prayer-time').textContent =
+                    DOMCache.followingPrayerTime.textContent =
                         futurePrayers.length === 1 ? formatTime(futurePrayers[0].time) : "Today";
                 }
 
@@ -1314,20 +1401,19 @@
                     hour12: true
                 };
 
-                document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', dateOptions);
-                document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', timeOptions);
+                DOMCache.currentDate.textContent = now.toLocaleDateString('en-US', dateOptions);
+                DOMCache.currentTime.textContent = now.toLocaleTimeString('en-US', timeOptions);
 
                 // Add location name to the time display
-                const locationDisplay = document.getElementById('location-time-display');
-                if (!locationDisplay) {
-                    const timeElement = document.getElementById('current-time');
+                if (!DOMCache.locationTimeDisplay) {
                     const locationSpan = document.createElement('span');
                     locationSpan.id = 'location-time-display';
                     locationSpan.className = 'text-sm text-gray-600 block';
                     locationSpan.textContent = `${selectedLocation} Time`;
-                    timeElement.parentNode.insertBefore(locationSpan, timeElement.nextSibling);
+                    DOMCache.currentTime.parentNode.insertBefore(locationSpan, DOMCache.currentTime.nextSibling);
+                    DOMCache.locationTimeDisplay = locationSpan;
                 } else {
-                    locationDisplay.textContent = `${selectedLocation} Time`;
+                    DOMCache.locationTimeDisplay.textContent = `${selectedLocation} Time`;
                 }
             } catch (error) {
                 console.error("Error updating date/time:", error);
@@ -1358,6 +1444,9 @@
 
         // Replace the current DOMContentLoaded event handler with this improved version
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize DOM element cache first for better performance
+            DOMCache.init();
+            
             // Rest of your initialization...
             let loadingTimer = setTimeout(() => {
                 const loadingIndicator = document.createElement('div');
