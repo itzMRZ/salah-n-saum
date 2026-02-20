@@ -43,7 +43,7 @@
     <style>
         /* Keep the rest of your styles */
         html, body {
-            height: 100%;
+            min-height: 100%;
             width: 100%;
             margin: 0;
             padding: 0;
@@ -1594,27 +1594,31 @@
             DOMCache.init();
 
             // ==================== MOBILE UX ENHANCEMENTS ====================
-            // Prevent pull-to-refresh on mobile
+            // Prevent pull-to-refresh on mobile (only at very top)
             let touchStartY = 0;
             document.addEventListener('touchstart', (e) => {
                 touchStartY = e.touches[0].clientY;
-            }, { passive: false });
+            }, { passive: true });
 
             document.addEventListener('touchmove', (e) => {
                 const touchY = e.touches[0].clientY;
                 const touchDelta = touchY - touchStartY;
 
-                // If at top of page and pulling down, prevent default
-                if (window.scrollY === 0 && touchDelta > 0) {
+                // Only prevent pull-to-refresh when at absolute top AND pulling down significantly
+                if (window.scrollY === 0 && touchDelta > 5) {
                     e.preventDefault();
                 }
             }, { passive: false });
 
-            // Prevent double-tap zoom on buttons
+            // Prevent double-tap zoom only on buttons and interactive elements
             let lastTouchEnd = 0;
             document.addEventListener('touchend', (e) => {
                 const now = Date.now();
-                if (now - lastTouchEnd <= 300) {
+                const target = e.target;
+                
+                // Only prevent double-tap zoom on buttons, not on scrollable content
+                if (now - lastTouchEnd <= 300 && 
+                    (target.tagName === 'BUTTON' || target.closest('button'))) {
                     e.preventDefault();
                 }
                 lastTouchEnd = now;
