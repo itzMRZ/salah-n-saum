@@ -1133,20 +1133,54 @@
             const selectedDisplay = document.createElement('div');
             selectedDisplay.className = 'bg-white border border-gray-300 rounded py-2 px-3 text-sm flex items-center justify-between cursor-pointer';
             selectedDisplay.style.minHeight = '36px';
-            selectedDisplay.innerHTML = `<span id="selected-location">Dhaka</span><i class="fas fa-chevron-down ml-2"></i>`;
+            selectedDisplay.innerHTML = `<span id="selected-location">Dhaka</span><i class="fas fa-chevron-down ml-2" aria-hidden="true"></i>`;
+
+            // Accessibility: Add ARIA roles and attributes
+            selectedDisplay.tabIndex = 0;
+            selectedDisplay.setAttribute('role', 'button');
+            selectedDisplay.setAttribute('aria-haspopup', 'listbox');
+            selectedDisplay.setAttribute('aria-expanded', 'false');
+            // Allow text content ("Dhaka", etc.) to be the label
 
             // Create dropdown options container
             const optionsContainer = document.createElement('div');
             optionsContainer.className = 'absolute z-10 bg-white border border-gray-300 rounded mt-1 py-1 w-full hidden';
             optionsContainer.style.maxHeight = '200px';
             optionsContainer.style.overflowY = 'auto';
+            optionsContainer.setAttribute('role', 'listbox');
+
+            // Helper to create accessible option
+            const createOption = (value, htmlContent, useInnerHTML = false) => {
+                const option = document.createElement('div');
+                option.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer focus:bg-gray-100 focus:outline-none';
+                option.dataset.value = value;
+                if (useInnerHTML) {
+                    option.innerHTML = htmlContent;
+                } else {
+                    option.textContent = htmlContent;
+                }
+                option.setAttribute('role', 'option');
+                option.tabIndex = -1; // Managed focus via arrow keys
+
+                // Set aria-selected based on current selection
+                const isSelected = value === selectedLocation;
+                option.setAttribute('aria-selected', isSelected);
+                if (isSelected) option.classList.add('bg-gray-50');
+
+                // Add keyboard handler for selection
+                option.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectOption(value);
+                    }
+                });
+
+                return option;
+            };
 
             // Add Dhaka option
-            const dhakaOption = document.createElement('div');
-            dhakaOption.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
-            dhakaOption.dataset.value = 'Dhaka';
-            dhakaOption.textContent = 'Dhaka';
-            optionsContainer.appendChild(dhakaOption);
+            optionsContainer.appendChild(createOption('Dhaka', 'Dhaka'));
 
             // Get all unique locations from both Sahri and Iftar objects
             const locations = new Set();
@@ -1160,26 +1194,14 @@
 
             // Add sorted locations to dropdown
             sortedLocations.forEach(location => {
-                const option = document.createElement('div');
-                option.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
-                option.dataset.value = location;
-                option.textContent = location;
-                optionsContainer.appendChild(option);
+                optionsContainer.appendChild(createOption(location, location));
             });
 
             // Add St. John's with Canadian flag icon
-            const stjohnsOption = document.createElement('div');
-            stjohnsOption.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center';
-            stjohnsOption.dataset.value = "St. John's";
-            stjohnsOption.innerHTML = `<i class="fab fa-canadian-maple-leaf text-red-600 mr-2"></i> St. John's`;
-            optionsContainer.appendChild(stjohnsOption);
+            optionsContainer.appendChild(createOption("St. John's", `<i class="fab fa-canadian-maple-leaf text-red-600 mr-2" aria-hidden="true"></i> St. John's`, true));
 
             // Add Klang with Malaysian flag emoji
-            const klangOption = document.createElement('div');
-            klangOption.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center';
-            klangOption.dataset.value = "Klang";
-            klangOption.innerHTML = `🇲🇾 Klang`;  // Using the Malaysian flag emoji
-            optionsContainer.appendChild(klangOption);
+            optionsContainer.appendChild(createOption("Klang", `🇲🇾 Klang`, true));
 
             // Add elements to the DOM
             dropdownContainer.appendChild(selectedDisplay);
@@ -1201,45 +1223,14 @@
             // Set the previously selected location
             hiddenSelect.value = selectedLocation;
 
-            // Update display with selected value
-            const updateSelectedDisplay = () => {
-                const value = selectedLocation;
-                let displayText = value;
-
-                // Add icons for special locations
-                if (value === "St. John's") {
-                    selectedDisplay.querySelector('#selected-location').innerHTML =
-                        `<i class="fab fa-canadian-maple-leaf text-red-600 mr-2"></i> St. John's`;
-                } else if (value === "Klang") {
-                    selectedDisplay.querySelector('#selected-location').innerHTML =
-                        `🇲🇾 Klang`;  // Using the Malaysian flag emoji
-                } else {
-                    selectedDisplay.querySelector('#selected-location').textContent = value;
-                }
-            };
-            updateSelectedDisplay();
-            // Toggle dropdown
-            selectedDisplay.addEventListener('click', () => {
-                optionsContainer.classList.toggle('hidden');
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!dropdownContainer.contains(e.target)) {
-                    optionsContainer.classList.add('hidden');
-                }
-            });
-
-            // Handle option selection
-            optionsContainer.addEventListener('click', (e) => {
-                const option = e.target.closest('div[data-value]');
-                if (!option) return;
-
-                selectedLocation = option.dataset.value;
+            // Shared selection logic
+            const selectOption = (value) => {
+                selectedLocation = value;
                 hiddenSelect.value = selectedLocation;
                 localStorage.setItem('selectedLocation', selectedLocation);
                 updateSelectedDisplay();
-                optionsContainer.classList.add('hidden');
+                closeDropdown();
+                selectedDisplay.focus(); // Return focus to trigger button
 
                 // Update the current date/time display immediately for the new location
                 updateCurrentDateTime();
@@ -1252,22 +1243,108 @@
                 } else {
                     loadRamadanData();
                 }
+            };
+
+            const toggleDropdown = () => {
+                const isHidden = optionsContainer.classList.contains('hidden');
+                if (isHidden) {
+                    optionsContainer.classList.remove('hidden');
+                    selectedDisplay.setAttribute('aria-expanded', 'true');
+                } else {
+                    closeDropdown();
+                }
+            };
+
+            const closeDropdown = () => {
+                optionsContainer.classList.add('hidden');
+                selectedDisplay.setAttribute('aria-expanded', 'false');
+            };
+
+            // Update display with selected value
+            const updateSelectedDisplay = () => {
+                const value = selectedLocation;
+
+                // Update aria-selected on options
+                Array.from(optionsContainer.children).forEach(child => {
+                    const isSelected = child.dataset.value === value;
+                    child.setAttribute('aria-selected', isSelected);
+                    if (isSelected) child.classList.add('bg-gray-50');
+                    else child.classList.remove('bg-gray-50');
+                });
+
+                // Add icons for special locations
+                if (value === "St. John's") {
+                    selectedDisplay.querySelector('#selected-location').innerHTML =
+                        `<i class="fab fa-canadian-maple-leaf text-red-600 mr-2" aria-hidden="true"></i> St. John's`;
+                } else if (value === "Klang") {
+                    selectedDisplay.querySelector('#selected-location').innerHTML =
+                        `🇲🇾 Klang`;  // Using the Malaysian flag emoji
+                } else {
+                    // Update text for other locations
+                    selectedDisplay.querySelector('#selected-location').textContent = value;
+                }
+            };
+            updateSelectedDisplay();
+
+            // Toggle dropdown
+            selectedDisplay.addEventListener('click', (e) => {
+                toggleDropdown();
+                e.stopPropagation();
             });
 
-            // Add keyboard navigation
-            dropdownContainer.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    if (e.target === selectedDisplay) {
-                        optionsContainer.classList.toggle('hidden');
-                        e.preventDefault();
-                    }
-                } else if (e.key === 'Escape') {
-                    optionsContainer.classList.add('hidden');
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!dropdownContainer.contains(e.target)) {
+                    closeDropdown();
                 }
             });
 
-            // Add focus styles
-            selectedDisplay.tabIndex = 0;
+            // Handle option selection via click
+            optionsContainer.addEventListener('click', (e) => {
+                const option = e.target.closest('div[data-value]');
+                if (!option) return;
+                selectOption(option.dataset.value);
+            });
+
+            // Add keyboard navigation for the main button
+            selectedDisplay.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleDropdown();
+                } else if (e.key === 'Escape') {
+                    closeDropdown();
+                } else if (e.key === 'ArrowDown') {
+                    // Open and focus first option
+                    e.preventDefault();
+                    if (optionsContainer.classList.contains('hidden')) {
+                         toggleDropdown();
+                    }
+                    const firstOption = optionsContainer.querySelector('[role="option"]');
+                    if (firstOption) firstOption.focus();
+                }
+            });
+
+            // Add keyboard navigation for options
+            optionsContainer.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeDropdown();
+                    selectedDisplay.focus();
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = document.activeElement.nextElementSibling;
+                    if (next && next.getAttribute('role') === 'option') {
+                        next.focus();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prev = document.activeElement.previousElementSibling;
+                    if (prev && prev.getAttribute('role') === 'option') {
+                        prev.focus();
+                    } else {
+                        selectedDisplay.focus();
+                    }
+                }
+            });
         }
 
         // Function to adjust time based on location offset
